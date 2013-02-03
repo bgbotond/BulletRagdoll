@@ -80,7 +80,7 @@ void BulletRagdollApp::setupParams()
 	mParams.addParam( "Fps", &mFps, "", true );
 	mParams.addSeparator();
 	mParams.addText( "Camera" );
-	mParams.addPersistentParam( "Lock camera", &mCameraLock, false );
+	mParams.addPersistentParam( "Lock camera", &mCameraLock, true );
 	mParams.addPersistentParam( "Fov", &mCameraFov, 45.f, "min=20 max=180 step=.1" );
 	mParams.addPersistentParam( "Eye", &mCameraEyePoint, Vec3f( 0.0f, 1.0f, 10.0f ));
 	mParams.addPersistentParam( "Center of Interest", &mCameraCenterOfInterestPoint, Vec3f( 0.0f, 1.0f, 0.0f ));

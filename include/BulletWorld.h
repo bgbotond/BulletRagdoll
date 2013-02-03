@@ -54,7 +54,7 @@ protected:
 
 	double                                     mTime;
 	ci::params::PInterfaceGl                   mParams;
-	static const int                           DEBUG_DRAW_NUM = 15;
+	static const int                           DEBUG_DRAW_NUM = 16;
 	bool                                       mDebugDrawActive[ DEBUG_DRAW_NUM ];
 
 	BulletConstraint                           mBulletConstraint;

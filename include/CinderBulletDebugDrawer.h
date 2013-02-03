@@ -23,6 +23,7 @@ public:
 		DT_DrawConstraintLimits = 12,
 		DT_FastWireframe        = 13,
 		DT_DrawNormals          = 14,
+		DT_DrawTransform        = 15,
 	};
 
 	CinderBulletDebugDrawer();
@@ -36,11 +37,14 @@ public:
 	virtual void setDebugMode( int debugMode );
 	virtual int  getDebugMode() const;
 
+	virtual void drawTransform( const btTransform &transform, btScalar orthoLen );
+
 	void setDrawEnable( DrawType drawType, bool enable );
 	bool getDrawEnable( DrawType drawType              ) const;
 
 private:
 	unsigned int mDebugModes;
+	bool         mDrawTransform;
 };
 
 

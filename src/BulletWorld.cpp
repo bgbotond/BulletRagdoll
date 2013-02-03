@@ -23,10 +23,9 @@ BulletWorld::~BulletWorld()
 
 void BulletWorld::setup()
 {
-	setupParams();
-
 	mTime = ci::app::App::get()->getElapsedSeconds();
 	initPhysics();
+	setupParams();
 }
 
 void BulletWorld::update()
@@ -154,18 +153,18 @@ void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 
 void BulletWorld::setupParams()
 {
-	mParams = ci::params::PInterfaceGl( "Bullet", ci::Vec2i( 250, 300 ), ci::Vec2i( 300, 50 ) );
+	mParams = ci::params::PInterfaceGl( "Bullet", ci::Vec2i( 250, 350 ), ci::Vec2i( 300, 50 ) );
 	mParams.addPersistentSizeAndPosition();
 
 	mParams.addText( "World" );
 	mParams.addPersistentParam( "Gravity", &mGravity, ci::Vec3f( 0.0f, -9.81f, 0.0f ) );
 
 	mParams.addText( "DebugDraw" );
-	const char *text[DEBUG_DRAW_NUM] = { "DrawWireframe", "DrawAabb", "DrawFeaturesText", "DrawContactPoints", "NoDeactivation", "NoHelpText", "DrawText", "ProfileTimings", "EnableSatComparison", "DisableBulletLCP", "EnableCCD", "DrawConstraints", "DrawConstraintLimits", "FastWireframe", "DrawNormals" };
+	const char *text[DEBUG_DRAW_NUM] = { "DrawWireframe", "DrawAabb", "DrawFeaturesText", "DrawContactPoints", "NoDeactivation", "NoHelpText", "DrawText", "ProfileTimings", "EnableSatComparison", "DisableBulletLCP", "EnableCCD", "DrawConstraints", "DrawConstraintLimits", "FastWireframe", "DrawNormals", "DrawTransform" };
 
 	for( int i = 0; i < DEBUG_DRAW_NUM; ++i )
 	{
-		mParams.addPersistentParam( text[i], &mDebugDrawActive[i], true );
+		mParams.addPersistentParam( text[i], &mDebugDrawActive[i], mDebugDrawer->getDrawEnable( (CinderBulletDebugDrawer::DrawType)i ));
 	}
 }
 

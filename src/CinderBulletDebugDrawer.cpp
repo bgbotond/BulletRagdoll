@@ -6,21 +6,22 @@
 CinderBulletDebugDrawer::CinderBulletDebugDrawer()
 : mDebugModes( 0 )
 {
-	setDrawEnable( DT_DrawWireframe       , true );
-	setDrawEnable( DT_DrawAabb            , true );
-	setDrawEnable( DT_DrawFeaturesText    , true );
-	setDrawEnable( DT_DrawContactPoints   , true );
-	setDrawEnable( DT_NoDeactivation      , true );
-	setDrawEnable( DT_NoHelpText          , true );
-	setDrawEnable( DT_DrawText            , true );
-	setDrawEnable( DT_ProfileTimings      , true );
-	setDrawEnable( DT_EnableSatComparison , true );
-	setDrawEnable( DT_DisableBulletLCP    , true );
-	setDrawEnable( DT_EnableCCD           , true );
-	setDrawEnable( DT_DrawConstraints     , true );
-	setDrawEnable( DT_DrawConstraintLimits, true );
-	setDrawEnable( DT_FastWireframe       , true );
-	setDrawEnable( DT_DrawNormals         , true );
+	setDrawEnable( DT_DrawWireframe       , true  );
+	setDrawEnable( DT_DrawAabb            , false );
+	setDrawEnable( DT_DrawFeaturesText    , false );
+	setDrawEnable( DT_DrawContactPoints   , false );
+	setDrawEnable( DT_NoDeactivation      , true  );
+	setDrawEnable( DT_NoHelpText          , false );
+	setDrawEnable( DT_DrawText            , false );
+	setDrawEnable( DT_ProfileTimings      , false );
+	setDrawEnable( DT_EnableSatComparison , false );
+	setDrawEnable( DT_DisableBulletLCP    , false );
+	setDrawEnable( DT_EnableCCD           , false );
+	setDrawEnable( DT_DrawConstraints     , false );
+	setDrawEnable( DT_DrawConstraintLimits, false );
+	setDrawEnable( DT_FastWireframe       , false );
+	setDrawEnable( DT_DrawNormals         , false );
+	setDrawEnable( DT_DrawTransform       , false );
 }
 
 CinderBulletDebugDrawer::~CinderBulletDebugDrawer()
@@ -60,6 +61,14 @@ int CinderBulletDebugDrawer::getDebugMode() const
 	return mDebugModes;
 }
 
+void CinderBulletDebugDrawer::drawTransform( const btTransform &transform, btScalar orthoLen )
+{
+	if( ! mDrawTransform )
+		return;
+
+	btIDebugDraw::drawTransform( transform, orthoLen );
+}
+
 void CinderBulletDebugDrawer::setDrawEnable( DrawType drawType, bool enable )
 {
 	btIDebugDraw::DebugDrawModes debugModel = btIDebugDraw::DBG_DrawWireframe;
@@ -81,6 +90,7 @@ void CinderBulletDebugDrawer::setDrawEnable( DrawType drawType, bool enable )
 	case DT_DrawConstraintLimits : debugModel = btIDebugDraw::DBG_DrawConstraintLimits; break;
 	case DT_FastWireframe        : debugModel = btIDebugDraw::DBG_FastWireframe;        break;
 	case DT_DrawNormals          : debugModel = btIDebugDraw::DBG_DrawNormals;          break;
+	case DT_DrawTransform        : mDrawTransform = enable; return;
 	}
 
 	if( enable )
@@ -110,6 +120,7 @@ bool CinderBulletDebugDrawer::getDrawEnable( DrawType drawType ) const
 	case DT_DrawConstraintLimits : debugModel = btIDebugDraw::DBG_DrawConstraintLimits; break;
 	case DT_FastWireframe        : debugModel = btIDebugDraw::DBG_FastWireframe;        break;
 	case DT_DrawNormals          : debugModel = btIDebugDraw::DBG_DrawNormals;          break;
+	case DT_DrawTransform        : return mDrawTransform;
 	}
 
 	return( mDebugModes & debugModel ) != 0;
