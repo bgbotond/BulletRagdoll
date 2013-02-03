@@ -47,7 +47,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -74,7 +74,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -106,19 +106,19 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\PParams.cpp" />
     <ClCompile Include="..\src\BulletConstraint.cpp" />
     <ClCompile Include="..\src\BulletWorld.cpp" />
     <ClCompile Include="..\src\BulletRagdollApp.cpp" />
     <ClCompile Include="..\src\CinderBulletDebugDrawer.cpp" />
-    <ClCompile Include="..\src\PParams.cpp" />
     <ClCompile Include="..\src\BulletRagdoll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\mndlkit\params\PParams.h" />
     <ClInclude Include="..\include\BulletConstraint.h" />
     <ClInclude Include="..\include\BulletWorld.h" />
     <ClInclude Include="..\include\CinderBullet.h" />
     <ClInclude Include="..\include\CinderBulletDebugDrawer.h" />
-    <ClInclude Include="..\include\PParams.h" />
     <ClInclude Include="..\include\BulletRagdoll.h" />
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>

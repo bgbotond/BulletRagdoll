@@ -4,7 +4,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "CinderBulletDebugDrawer.h"
 #include "BulletConstraint.h"
-#include "PParams.h"
+#include "mndlkit/params/PParams.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Camera.h"
 
@@ -53,7 +53,7 @@ protected:
 	ci::Vec3f                                  mGravity;
 
 	double                                     mTime;
-	ci::params::PInterfaceGl                   mParams;
+	mndl::kit::params::PInterfaceGl            mParams;
 	static const int                           DEBUG_DRAW_NUM = 16;
 	bool                                       mDebugDrawActive[ DEBUG_DRAW_NUM ];
 

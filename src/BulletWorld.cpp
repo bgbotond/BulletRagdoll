@@ -153,7 +153,7 @@ void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 
 void BulletWorld::setupParams()
 {
-	mParams = ci::params::PInterfaceGl( "Bullet", ci::Vec2i( 250, 350 ), ci::Vec2i( 300, 50 ) );
+	mParams = mndl::kit::params::PInterfaceGl( "Bullet", ci::Vec2i( 250, 350 ), ci::Vec2i( 300, 50 ) );
 	mParams.addPersistentSizeAndPosition();
 
 	mParams.addText( "World" );

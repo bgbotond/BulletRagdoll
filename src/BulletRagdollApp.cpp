@@ -3,7 +3,7 @@
 #include "cinder/Utilities.h"
 #include "cinder/MayaCamUI.h"
 #include "AntTweakBar.h"
-#include "PParams.h"
+#include "mndlkit/params/PParams.h"
 #include "BulletWorld.h"
 
 using namespace ci;
@@ -30,7 +30,7 @@ protected:
 protected:
 	BulletWorld mBulletWorld;
 
-	params::PInterfaceGl mParams;
+	mndl::kit::params::PInterfaceGl mParams;
 	float mFps;
 
 	// camera
@@ -71,9 +71,9 @@ void BulletRagdollApp::setupParams()
 		createDirectories( assetPath );
 		paramsXml = assetPath / "params.xml" ;
 	}
-	params::PInterfaceGl::load( paramsXml.string());
+	mndl::kit::params::PInterfaceGl::load( paramsXml.string());
 
-	mParams = params::PInterfaceGl( "Parameters", Vec2i( 230, 300 ), Vec2i( 50, 50 ) );
+	mParams = mndl::kit::params::PInterfaceGl( "Parameters", Vec2i( 230, 300 ), Vec2i( 50, 50 ) );
 	mParams.addPersistentSizeAndPosition();
 
 	mFps = 0;
@@ -197,7 +197,7 @@ void BulletRagdollApp::draw()
 	gl::setMatrices( mMayaCam.getCamera() );
 
 	mBulletWorld.draw();
-	params::PInterfaceGl::draw();
+	mndl::kit::params::PInterfaceGl::draw();
 }
 
 void BulletRagdollApp::resize()
@@ -224,7 +224,7 @@ void BulletRagdollApp::showAllParams( bool visible )
 
 void BulletRagdollApp::shutdown()
 {
-	params::PInterfaceGl::save();
+	mndl::kit::params::PInterfaceGl::save();
 }
 
 CINDER_APP_NATIVE( BulletRagdollApp, RendererGl )

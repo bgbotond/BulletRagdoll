@@ -13,15 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="blocks">
+      <UniqueIdentifier>{379d2024-4860-4b0a-88b3-d50bc1de9aa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="blocks\mndlkit">
+      <UniqueIdentifier>{6f37deef-119c-4ce7-a3f4-8fa014333906}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClCompile Include="..\src\CinderBulletDebugDrawer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PParams.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\BulletRagdollApp.cpp">
@@ -36,15 +39,15 @@
     <ClInclude Include="..\include\BulletConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\mndlkit\params\PParams.h">
+      <Filter>blocks\mndlkit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\CinderBulletDebugDrawer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\PParams.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\BulletWorld.h">
@@ -65,6 +68,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\BulletConstraint.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\PParams.cpp">
+      <Filter>blocks\mndlkit</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
