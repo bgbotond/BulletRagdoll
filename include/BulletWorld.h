@@ -3,6 +3,7 @@
 
 #include "btBulletDynamicsCommon.h"
 #include "CinderBulletDebugDrawer.h"
+#include "BulletConstraint.h"
 #include "PParams.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Camera.h"
@@ -29,6 +30,10 @@ public:
 protected:
 	btRigidBody *createRigidBody( btDynamicsWorld *world, btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
 
+	bool checkIntersects( const ci::Ray &ray, float farClip, BulletConstraint *constraint );
+	void addConstraint( const BulletConstraint &constraint, float clamping, float tau );
+	void removeConstraint( const BulletConstraint &constraint );
+
 	void setupParams();
 
 protected:
@@ -51,6 +56,9 @@ protected:
 	ci::params::PInterfaceGl                   mParams;
 	static const int                           DEBUG_DRAW_NUM = 15;
 	bool                                       mDebugDrawActive[ DEBUG_DRAW_NUM ];
+
+	BulletConstraint                           mBulletConstraint;
+	bool                                       mDragging;
 };
 
 #endif // __BulletWorld_H__

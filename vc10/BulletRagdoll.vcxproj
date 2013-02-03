@@ -106,6 +106,7 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\BulletConstraint.cpp" />
     <ClCompile Include="..\src\BulletWorld.cpp" />
     <ClCompile Include="..\src\BulletRagdollApp.cpp" />
     <ClCompile Include="..\src\CinderBulletDebugDrawer.cpp" />
@@ -113,6 +114,7 @@
     <ClCompile Include="..\src\BulletRagdoll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\BulletConstraint.h" />
     <ClInclude Include="..\include\BulletWorld.h" />
     <ClInclude Include="..\include\CinderBullet.h" />
     <ClInclude Include="..\include\CinderBulletDebugDrawer.h" />

@@ -11,7 +11,9 @@ BulletWorld::BulletWorld()
 , mSolver( NULL )
 , mDynamicsWorld( NULL )
 , mDebugDrawer( NULL )
+, mDragging( false )
 {
+	mBulletConstraint.init();
 }
 
 BulletWorld::~BulletWorld()
@@ -169,12 +171,71 @@ void BulletWorld::setupParams()
 
 void BulletWorld::mouseDown( ci::app::MouseEvent event, const ci::CameraPersp &cam )
 {
+	ci::Vec2f pos  = ci::Vec2f( event.getPos() ) / ci::Vec2f( ci::app::App::get()->getWindowSize() );
+	pos.y          = 1.0f - pos.y;
+	ci::Ray ray    = cam.generateRay( pos.x, pos.y, ci::app::App::get()->getWindowAspectRatio() );
+	mDragging      = checkIntersects( ray, cam.getFarClip(), &mBulletConstraint );
+	if( mDragging )
+	{
+		addConstraint( mBulletConstraint, 0.0f, 0.01f );
+	}
+}
 
+void BulletWorld::addConstraint( const BulletConstraint &constraint, float clamping, float tau )
+{
+	mDynamicsWorld->addConstraint( constraint.mConstraint );
+	constraint.mConstraint->m_setting.m_impulseClamp	= clamping;
+	constraint.mConstraint->m_setting.m_tau				= tau;
+}
+
+void BulletWorld::removeConstraint( const BulletConstraint &constraint )
+{
+	mDynamicsWorld->removeConstraint( constraint.mConstraint );
+}
+
+bool BulletWorld::checkIntersects( const ci::Ray &ray, float farClip, BulletConstraint *constraint )
+{
+	btVector3 rayFrom = CinderBullet::convert( ray.getOrigin() );
+	btVector3 rayTo   = CinderBullet::convert( ray.calcPosition( farClip ) );
+
+	btCollisionWorld::ClosestRayResultCallback rayCallback( rayFrom, rayTo );
+	mDynamicsWorld->rayTest( rayFrom, rayTo, rayCallback );
+
+	if( rayCallback.hasHit() )
+	{
+		btRigidBody* collisionBody = const_cast<btRigidBody*>( btRigidBody::upcast( rayCallback.m_collisionObject ));
+		if( collisionBody )
+		{
+			btVector3 position = rayCallback.m_hitPointWorld;
+			btVector3 pivot    = collisionBody->getCenterOfMassTransform().inverse() * position;
+
+			constraint->mConstraint = new btPoint2PointConstraint( *collisionBody, pivot );
+			constraint->mDistance   = ( position - rayFrom ).length();
+			constraint->mPosition   = CinderBullet::convert( rayTo );
+
+			return true;
+		}
+	}
+	return false;
 }
 
 void BulletWorld::mouseDrag( ci::app::MouseEvent event, const ci::CameraPersp &cam )
 {
+	if( mDragging )
+	{
+		ci::Vec2f pos = ci::Vec2f( event.getPos() ) / ci::Vec2f( ci::app::App::get()->getWindowSize() );
+		pos.y         = 1.0f - pos.y;
+		ci::Ray ray   = cam.generateRay( pos.x, pos.y, ci::app::App::get()->getWindowAspectRatio() );
+		mBulletConstraint.update( ray );
+	}
 }
+
 void BulletWorld::mouseUp( ci::app::MouseEvent event, const ci::CameraPersp &cam )
 {
+	if ( mDragging )
+	{
+		removeConstraint( mBulletConstraint );
+		mBulletConstraint.reset();
+		mDragging = false;
+	}
 }
