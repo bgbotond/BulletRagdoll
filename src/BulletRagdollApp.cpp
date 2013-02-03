@@ -94,25 +94,23 @@ void BulletRagdollApp::setupParams()
 
 void BulletRagdollApp::mouseDown( MouseEvent event )
 {
-	if ( ! mCameraLock )
-		mMayaCam.mouseDown( event.getPos() );
-	else
+	if ( mCameraLock )
 		mBulletWorld.mouseDown( event, mMayaCam.getCamera());
+	else
+		mMayaCam.mouseDown( event.getPos() );
 }
 
 void BulletRagdollApp::mouseDrag( MouseEvent event )
 {
-	if ( ! mCameraLock )
-		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
-	else
+	if ( mCameraLock )
 		mBulletWorld.mouseDrag( event, mMayaCam.getCamera());
+	else
+		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
 }
 
 void BulletRagdollApp::mouseUp( MouseEvent event )
 {
-	if ( ! mCameraLock )
-		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
-	else
+	if ( mCameraLock )
 		mBulletWorld.mouseUp( event, mMayaCam.getCamera());
 }
 
