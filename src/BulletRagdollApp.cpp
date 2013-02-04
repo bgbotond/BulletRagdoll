@@ -25,7 +25,6 @@ public:
 
 protected:
 	void setupParams();
-	void showAllParams( bool visible );
 
 protected:
 	BulletWorld mBulletWorld;
@@ -59,19 +58,7 @@ void BulletRagdollApp::setup()
 
 void BulletRagdollApp::setupParams()
 {
-	// params
-	fs::path paramsXml( getAssetPath( "params.xml" ));
-	if ( paramsXml.empty() )
-	{
-#if defined( CINDER_MAC )
-		fs::path assetPath( getResourcePath() / "assets" );
-#else
-		fs::path assetPath( getAppPath() / "assets" );
-#endif
-		createDirectories( assetPath );
-		paramsXml = assetPath / "params.xml" ;
-	}
-	mndl::kit::params::PInterfaceGl::load( paramsXml.string());
+	mndl::kit::params::PInterfaceGl::load( "params.xml" );
 
 	mParams = mndl::kit::params::PInterfaceGl( "Parameters", Vec2i( 230, 300 ), Vec2i( 50, 50 ) );
 	mParams.addPersistentSizeAndPosition();
@@ -136,7 +123,7 @@ void BulletRagdollApp::keyDown( KeyEvent event )
 
 	case KeyEvent::KEY_s:
 		{
-			showAllParams( !mParams.isVisible() );
+			mndl::kit::params::PInterfaceGl::showAllParams( !mParams.isVisible() );
 			if ( isFullScreen() )
 			{
 				if ( mParams.isVisible() )
@@ -205,21 +192,6 @@ void BulletRagdollApp::resize()
 	CameraPersp cam = mMayaCam.getCamera();
 	cam.setAspectRatio( getWindowAspectRatio() );
 	mMayaCam.setCurrentCam( cam );
-}
-
-// show/hide all bars except help, which is always hidden
-void BulletRagdollApp::showAllParams( bool visible )
-{
-	int barCount = TwGetBarCount();
-
-	int32_t visibleInt = visible ? 1 : 0;
-	for ( int i = 0; i < barCount; ++i )
-	{
-		TwBar *bar = TwGetBarByIndex( i );
-		TwSetParam( bar, NULL, "visible", TW_PARAM_INT32, 1, &visibleInt );
-	}
-
-	TwDefine( "TW_HELP visible=false" );
 }
 
 void BulletRagdollApp::shutdown()

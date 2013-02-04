@@ -3,7 +3,7 @@ env = Environment(ENV = {'PATH' : os.environ['PATH']})
 
 env['APP_TARGET'] = 'BulletRagdollApp'
 env['APP_SOURCES'] = ['BulletConstraint.cpp', 'BulletRagdoll.cpp', 'BulletRagdollApp.cpp',
-					'BulletWorld.cpp', 'CinderBulletDebugDrawer.cpp', 'PParams.cpp']
+					'BulletWorld.cpp', 'CinderBulletDebugDrawer.cpp']
 env['DEBUG'] = 0
 
 def CheckPKGConfig(context, version):
@@ -35,6 +35,8 @@ if (not GetOption('clean')):
 			env.ParseConfig('pkg-config --cflags --libs %s' % (lib))
 
 	env = conf.Finish()
+
+env = SConscript('../../../blocks/MndlKit/scons/SConscript', exports = 'env')
 
 SConscript('../../../scons/SConscript', exports = 'env')
 
