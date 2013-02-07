@@ -107,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\PParams.cpp" />
+    <ClCompile Include="..\src\BulletBird.cpp" />
     <ClCompile Include="..\src\BulletConstraint.cpp" />
     <ClCompile Include="..\src\BulletWorld.cpp" />
     <ClCompile Include="..\src\BulletRagdollApp.cpp" />
@@ -115,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\mndlkit\params\PParams.h" />
+    <ClInclude Include="..\include\BulletBird.h" />
     <ClInclude Include="..\include\BulletConstraint.h" />
     <ClInclude Include="..\include\BulletWorld.h" />
     <ClInclude Include="..\include\CinderBullet.h" />

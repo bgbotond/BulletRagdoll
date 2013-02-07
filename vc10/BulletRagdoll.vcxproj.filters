@@ -42,6 +42,9 @@
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\mndlkit\params\PParams.h">
       <Filter>blocks\mndlkit</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\BulletBird.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -71,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\PParams.cpp">
       <Filter>blocks\mndlkit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\BulletBird.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

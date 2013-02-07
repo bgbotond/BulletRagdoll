@@ -26,6 +26,7 @@ public:
 	void donePhysics();
 
 	void spawnBulletRagdoll( const ci::Vec3f &pos );
+	void spawnBulletBird( const ci::Vec3f &pos );
 
 protected:
 	btRigidBody *createRigidBody( btDynamicsWorld *world, btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
@@ -39,6 +40,7 @@ protected:
 protected:
 
 	btAlignedObjectArray< class BulletRagdoll *>     mBulletRagdolls;
+	btAlignedObjectArray< class BulletBird    *>     mBulletBirds;
 
 	btDefaultCollisionConfiguration           *mCollisionConfiguration;
 	btCollisionDispatcher                     *mDispatcher;

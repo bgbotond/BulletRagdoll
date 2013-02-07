@@ -75,7 +75,7 @@ void BulletRagdollApp::setupParams()
 	mParams.addPersistentParam( "Position", &mPosition, Vec3f( 0.0f, 10.0f, 0.0f ));
 	mParams.addButton( "Spawn", [ this ]()
 								{
-									mBulletWorld.spawnBulletRagdoll( mPosition );
+									mBulletWorld.spawnBulletBird( mPosition );
 								} );
 }
 
@@ -178,7 +178,7 @@ void BulletRagdollApp::update()
 void BulletRagdollApp::draw()
 {
 	// clear out the window with black
-	gl::clear( Color::black() );
+	gl::clear( Color::gray( .8 ) );
 
 	gl::setViewport( getWindowBounds() );
 	gl::setMatrices( mMayaCam.getCamera() );

@@ -3,6 +3,7 @@
 #include "CinderBullet.h"
 #include "BulletWorld.h"
 #include "BulletRagdoll.h"
+#include "BulletBird.h"
 
 BulletWorld::BulletWorld()
 : mCollisionConfiguration( NULL )
@@ -101,6 +102,12 @@ void BulletWorld::donePhysics()
 		delete bulletRagdoll;
 	}
 
+	for( int i = 0; i < mBulletBirds.size(); ++i )
+	{
+		BulletBird *bulletBird = mBulletBirds[ i ];
+		delete bulletBird;
+	}
+
 	for( int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i )
 	{
 		btCollisionObject *obj = mDynamicsWorld->getCollisionObjectArray()[ i ];
@@ -149,6 +156,12 @@ void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 {
 	BulletRagdoll *bulletRagdoll = new BulletRagdoll( mDynamicsWorld, CinderBullet::convert( pos ));
 	mBulletRagdolls.push_back( bulletRagdoll );
+}
+
+void BulletWorld::spawnBulletBird( const ci::Vec3f &pos )
+{
+	BulletBird *bulletBird = new BulletBird( mDynamicsWorld, CinderBullet::convert( pos ));
+	mBulletBirds.push_back( bulletBird );
 }
 
 void BulletWorld::setupParams()
