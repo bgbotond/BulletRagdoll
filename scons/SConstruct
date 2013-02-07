@@ -2,8 +2,8 @@ import os
 env = Environment(ENV = {'PATH' : os.environ['PATH']})
 
 env['APP_TARGET'] = 'BulletRagdollApp'
-env['APP_SOURCES'] = ['BulletConstraint.cpp', 'BulletRagdoll.cpp', 'BulletRagdollApp.cpp',
-					'BulletWorld.cpp', 'CinderBulletDebugDrawer.cpp']
+env['APP_SOURCES'] = ['BulletBird.cpp', 'BulletConstraint.cpp', 'BulletRagdoll.cpp',
+					'BulletRagdollApp.cpp', 'BulletWorld.cpp', 'CinderBulletDebugDrawer.cpp']
 env['DEBUG'] = 0
 
 def CheckPKGConfig(context, version):
