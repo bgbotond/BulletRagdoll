@@ -51,6 +51,29 @@ void CinderBulletDebugDrawer::draw3dText( const btVector3 &location, const char 
 	ci::gl::drawString( textString, ci::Vec2f( location.getX(), location.getY() ));
 }
 
+void CinderBulletDebugDrawer::drawSphere( btScalar radius, const btTransform &transform, const btVector3 &color )
+{
+	ci::ColorA colorA = ci::ColorA( color.getX(), color.getY(), color.getZ() );
+
+	ci::gl::enableWireframe();
+	ci::gl::color( colorA );
+	ci::gl::drawSphere( CinderBullet::convert( transform.getOrigin()), radius, 20 );
+	ci::gl::disableWireframe();
+}
+
+// void CinderBulletDebugDrawer::drawCylinder( btScalar radius, btScalar halfHeight, int upAxis, const btTransform &transform, const btVector3 &color )
+// {
+// 	ci::ColorA colorA = ci::ColorA( color.getX(), color.getY(), color.getZ() );
+// 
+// 	ci::gl::enableWireframe();
+// 	ci::gl::color( colorA );
+// 	ci::gl::pushMatrices();
+// 	ci::gl::translate( CinderBullet::convert( transform.getOrigin()));
+// 	ci::gl::drawCylinder( radius, radius, halfHeight, 20, 3 );
+// 	ci::gl::popMatrices();
+// 	ci::gl::disableWireframe();
+// }
+
 void CinderBulletDebugDrawer::setDebugMode( int debugMode )
 {
 	mDebugModes = (DebugDrawModes) debugMode;

@@ -5,10 +5,13 @@
 #include "AntTweakBar.h"
 #include "mndlkit/params/PParams.h"
 #include "BulletWorld.h"
+#include "BulletBird.h"
+#include "Cinder-LeapSdk.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using namespace LeapSdk;
 
 class BulletRagdollApp : public AppNative
 {
@@ -28,6 +31,8 @@ protected:
 
 protected:
 	BulletWorld mBulletWorld;
+	BulletBird *mBulletBird;
+	BulletBird *mBulletBirdDebug;
 
 	mndl::kit::params::PInterfaceGl mParams;
 	float mFps;
@@ -41,10 +46,23 @@ protected:
 
 	// ragdoll
 	Vec3f     mPosition;
+	Vec3f     mDirection;
+	Vec3f     mNormal;
+
+	// Leap
+	uint32_t                mCallbackId;
+	LeapSdk::HandMap        mHands;
+	LeapSdk::DeviceRef      mLeap;
+	void                    onFrame( LeapSdk::Frame frame );
+	int                     mActHand;
+	Vec3f                   mHandPos;
 };
 
 void BulletRagdollApp::setup()
 {
+	mBulletBird = 0;
+	mBulletBirdDebug = 0;
+
 	setupParams();
 
 	CameraPersp cam;
@@ -54,6 +72,47 @@ void BulletRagdollApp::setup()
 	mMayaCam.setCurrentCam( cam );
 
 	mBulletWorld.setup();
+
+	// Start device
+	mLeap = Device::create();
+	mLeap->addCallback( &BulletRagdollApp::onFrame, this );
+	mActHand = -1;
+}
+
+// Called when Leap frame data is ready
+void BulletRagdollApp::onFrame( Frame frame )
+{
+	mHands = frame.getHands();
+
+	if( mHands.size())
+	{
+		if( mActHand == -1 )
+		{
+			for( HandMap::const_iterator it = mHands.begin(); it != mHands.end(); ++it )
+			{
+				Hand hand = it->second;
+
+				if( hand.getFingers().size() == 5 )
+				{
+					mActHand = it->first;
+					break;
+				}
+			}
+		}
+		else
+		{
+			HandMap::const_iterator it = mHands.find( mActHand );
+
+			if( it != mHands.end())
+			{
+				mActHand = mHands.begin()->first;
+			}
+		}
+	}
+	else
+	{
+		mActHand = -1;
+	}
 }
 
 void BulletRagdollApp::setupParams()
@@ -72,11 +131,27 @@ void BulletRagdollApp::setupParams()
 	mParams.addPersistentParam( "Eye", &mCameraEyePoint, Vec3f( 0.0f, 1.0f, 10.0f ));
 	mParams.addPersistentParam( "Center of Interest", &mCameraCenterOfInterestPoint, Vec3f( 0.0f, 1.0f, 0.0f ));
 	mParams.addText( "Ragdoll" );
-	mParams.addPersistentParam( "Position", &mPosition, Vec3f( 0.0f, 10.0f, 0.0f ));
+	mParams.addPersistentParam( "Position" , &mPosition , Vec3f( 0.0f, 10.0f, 0.0f ));
+	mParams.addPersistentParam( "Direction", &mDirection, Vec3f( 0.0f,  0.0f, 1.0f ));
+	mParams.addPersistentParam( "Normal"   , &mNormal   , Vec3f( 0.0f, -1.0f, 0.0f ));
 	mParams.addButton( "Spawn", [ this ]()
 								{
-									mBulletWorld.spawnBulletBird( mPosition );
+									if( mBulletBirdDebug )
+										mBulletWorld.removeBulletBird( mBulletBirdDebug );
+									mBulletBirdDebug = mBulletWorld.spawnBulletBird( mPosition * 10 );
 								} );
+	mParams.addButton( "Update", [ this ]()
+								{
+									if( ! mBulletBirdDebug )
+										return;
+
+									Vec3f dir  = mDirection.normalized();
+									Vec3f norm = mNormal.normalized();
+
+									mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, dir, norm );
+								} );
+
+	mParams.addPersistentParam( "Hand pos", &mHandPos, Vec3f( 0, 0, 0 ), "", true );
 }
 
 void BulletRagdollApp::mouseDown( MouseEvent event )
@@ -134,12 +209,17 @@ void BulletRagdollApp::keyDown( KeyEvent event )
 			break;
 		}
 
+	case KeyEvent::KEY_l:
+		{
+			mCameraLock = ! mCameraLock;
+		}
+		break;
 	case KeyEvent::KEY_ESCAPE:
 		quit();
 		break;
 
 	default:
-		break;
+		mBulletWorld.keyDown( event );
 	}
 }
 
@@ -173,12 +253,39 @@ void BulletRagdollApp::update()
 		mCameraEyePoint              = cam.getEyePoint();
 		mCameraCenterOfInterestPoint = cam.getCenterOfInterestPoint();
 	}
+
+	// Update device
+	if( mLeap && mLeap->isConnected() )
+	{
+		mLeap->update();
+	}
+
+	if( mActHand != -1 )
+	{
+		Hand hand = mHands[ mActHand ];
+
+		mHandPos = hand.getPosition();
+
+// 		if( ! mBulletBird )
+// 			mBulletBird = mBulletWorld.spawnBulletBird( hand.getPosition());
+// 
+// 		mBulletWorld.updateBulletBird( mBulletBird, hand.getPosition(), hand.getDirection(), hand.getNormal());
+	}
+	else
+	{
+// 		if( mBulletBird )
+// 		{
+// 			mBulletWorld.removeBulletBird( mBulletBird );
+// 			mBulletBird = 0;
+// 			mHandPos = Vec3f( -1, -1, -1 );
+// 		}
+	}
 }
 
 void BulletRagdollApp::draw()
 {
 	// clear out the window with black
-	gl::clear( Color::gray( .8 ) );
+	gl::clear( Colorf( 0.392, 0.392, 0.784 ));
 
 	gl::setViewport( getWindowBounds() );
 	gl::setMatrices( mMayaCam.getCamera() );
@@ -196,6 +303,9 @@ void BulletRagdollApp::resize()
 
 void BulletRagdollApp::shutdown()
 {
+	mLeap->removeCallback( mCallbackId );
+	mHands.clear();
+
 	mndl::kit::params::PInterfaceGl::save();
 }
 

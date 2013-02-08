@@ -4,6 +4,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "CinderBulletDebugDrawer.h"
 #include "BulletConstraint.h"
+#include "BulletBird.h"
 #include "mndlkit/params/PParams.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Camera.h"
@@ -21,12 +22,15 @@ public:
 	void mouseDown( ci::app::MouseEvent event, const ci::CameraPersp &cam );
 	void mouseDrag( ci::app::MouseEvent event, const ci::CameraPersp &cam );
 	void mouseUp( ci::app::MouseEvent event, const ci::CameraPersp &cam );
+	void keyDown( ci::app::KeyEvent event );
 
 	void initPhysics();
 	void donePhysics();
 
 	void spawnBulletRagdoll( const ci::Vec3f &pos );
-	void spawnBulletBird( const ci::Vec3f &pos );
+	BulletBird *spawnBulletBird( const ci::Vec3f &pos );
+	void removeBulletBird( BulletBird *bulletBird );
+	void updateBulletBird( BulletBird *bulletBird, const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
 
 protected:
 	btRigidBody *createRigidBody( btDynamicsWorld *world, btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
@@ -61,6 +65,9 @@ protected:
 
 	BulletConstraint                           mBulletConstraint;
 	bool                                       mDragging;
+
+	bool mSimulateOne;
+	bool mSimulateAlways;
 };
 
 #endif // __BulletWorld_H__

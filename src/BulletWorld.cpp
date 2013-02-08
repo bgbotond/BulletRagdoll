@@ -51,7 +51,11 @@ void BulletWorld::update()
 
 	if( mDynamicsWorld )
 	{
-		mDynamicsWorld->stepSimulation( ellapsedTime / 1000000.f );
+		if( mSimulateOne || mSimulateAlways )
+		{
+			mDynamicsWorld->stepSimulation( ellapsedTime / 1000000.f );
+			mSimulateOne = false;
+		}
 
 		//optional but useful: debug drawing
 		mDynamicsWorld->debugDrawWorld();
@@ -158,10 +162,26 @@ void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 	mBulletRagdolls.push_back( bulletRagdoll );
 }
 
-void BulletWorld::spawnBulletBird( const ci::Vec3f &pos )
+BulletBird *BulletWorld::spawnBulletBird( const ci::Vec3f &pos )
 {
-	BulletBird *bulletBird = new BulletBird( mDynamicsWorld, CinderBullet::convert( pos ));
+	ci::Vec3f posConv = pos / 10;
+	BulletBird *bulletBird = new BulletBird( mDynamicsWorld, posConv );
 	mBulletBirds.push_back( bulletBird );
+
+	return bulletBird;
+}
+
+void BulletWorld::removeBulletBird( BulletBird *bulletBird )
+{
+	mBulletBirds.remove( bulletBird );
+
+	delete bulletBird;
+}
+
+void BulletWorld::updateBulletBird( BulletBird *bulletBird, const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm )
+{
+	ci::Vec3f posConv = pos / 10;
+	bulletBird->update( posConv, dir, norm );
 }
 
 void BulletWorld::setupParams()
@@ -171,6 +191,9 @@ void BulletWorld::setupParams()
 
 	mParams.addText( "World" );
 	mParams.addPersistentParam( "Gravity", &mGravity, ci::Vec3f( 0.0f, -9.81f, 0.0f ) );
+
+	mParams.addPersistentParam( "SimulateOne"   , &mSimulateOne   , false );
+	mParams.addPersistentParam( "SimulateAlways", &mSimulateAlways, false );
 
 	mParams.addText( "DebugDraw" );
 	const char *text[DEBUG_DRAW_NUM] = { "DrawWireframe", "DrawAabb", "DrawFeaturesText", "DrawContactPoints", "NoDeactivation", "NoHelpText", "DrawText", "ProfileTimings", "EnableSatComparison", "DisableBulletLCP", "EnableCCD", "DrawConstraints", "DrawConstraintLimits", "FastWireframe", "DrawNormals", "DrawTransform" };
@@ -249,5 +272,18 @@ void BulletWorld::mouseUp( ci::app::MouseEvent event, const ci::CameraPersp &cam
 		removeConstraint( mBulletConstraint );
 		mBulletConstraint.reset();
 		mDragging = false;
+	}
+}
+
+void BulletWorld::keyDown( ci::app::KeyEvent event )
+{
+	switch( event.getCode() )
+	{
+	case ci::app::KeyEvent::KEY_v:
+		mSimulateOne = ! mSimulateOne;
+		break;
+	case ci::app::KeyEvent::KEY_c:
+		mSimulateAlways = ! mSimulateAlways;
+		break;
 	}
 }

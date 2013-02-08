@@ -14,7 +14,6 @@ class BulletBird
 		BODYPART_BODY,
 		BODYPART_LEG,
 		BODYPART_FOOT,
-		BODYPART_HANG,
 	};
 
 typedef std::vector< btCollisionShape  * > Shapes;
@@ -22,14 +21,18 @@ typedef std::vector< btRigidBody       * > Bodies;
 typedef std::vector< btTypedConstraint * > Constraints;
 
 public:
-	BulletBird( btDynamicsWorld *ownerWorld, const btVector3 &positionOffset );
+	BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffset );
 	~BulletBird();
+
+	void update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
 
 protected:
 	btRigidBody *localCreateRigidBody( btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
 
 	btCollisionShape  *getShape( BodyPart bodyPart );
 	btRigidBody       *getBody ( BodyPart bodyPart, int count = 0 );
+
+	void setPos( btRigidBody *rigidBody, ci::Vec3f &pos );
 
 protected:
 	btDynamicsWorld   *mOwnerWorld;
@@ -40,12 +43,19 @@ protected:
 	float       mBodySize;  // sphere shape
 	float       mLegSize;   // cylinder shape
 	float       mFootSize;  // sphere shape
-	float       mHangSize;  // box shape
 
 	int         mNeckPart;  // count of neck sphere
 	int         mLegPart;   // count of leg  sphere
-	int         mHangPart;  // count of hang sphere
 	int         mStringSize; // size of string from head
+
+	float       mStickSize;
+
+	btVector3                mPosHead;
+	btVector3                mPosBody;
+	btVector3                mPosRightLeg;
+	btVector3                mPosLeftLeg;
+	float                    mHangPivot[4];
+	btPoint2PointConstraint *mHangConstraint[4];
 
 	Shapes      mShapes;
 	Bodies      mBodies;

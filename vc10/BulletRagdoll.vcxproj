@@ -47,7 +47,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -62,8 +62,8 @@
       <AdditionalIncludeDirectories>"..\..\..\cinder_0.8.5\include";..\include</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>cinder_d.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;LinearMath_vs2010_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\cinder_0.8.5\lib;..\..\..\cinder_0.8.5\lib\msw;..\..\..\bullet-2.81-rev2613\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cinder_d.lib;Leapd.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;LinearMath_vs2010_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\cinder_0.8.5\lib;..\..\..\cinder_0.8.5\lib\msw;..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\lib\msw;..\..\..\bullet-2.81-rev2613\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -74,7 +74,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\cinder_0.8.5\include;..\..\..\cinder_0.8.5\boost;..\..\..\cinder_0.8.5\src\AntTweakBar;..\..\..\cinder_0.8.5\blocks\MndlKit\src;..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src;..\..\..\bullet-2.81-rev2613\src</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -90,8 +90,8 @@
       <AdditionalIncludeDirectories>"..\..\..\cinder_0.8.5\include";..\include</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>cinder.lib;BulletDynamics_vs2010.lib;BulletCollision_vs2010.lib;LinearMath_vs2010.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\cinder_0.8.5\lib;..\..\..\cinder_0.8.5\lib\msw;..\..\..\bullet-2.81-rev2613\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cinder.lib;Leap.lib;BulletDynamics_vs2010.lib;BulletCollision_vs2010.lib;LinearMath_vs2010.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\cinder_0.8.5\lib;..\..\..\cinder_0.8.5\lib\msw;..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\lib\msw;..\..\..\bullet-2.81-rev2613\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -106,6 +106,7 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.cpp" />
     <ClCompile Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\PParams.cpp" />
     <ClCompile Include="..\src\BulletBird.cpp" />
     <ClCompile Include="..\src\BulletConstraint.cpp" />
@@ -115,6 +116,9 @@
     <ClCompile Include="..\src\BulletRagdoll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.h" />
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Leap.h" />
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\LeapMath.h" />
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\MndlKit\src\mndlkit\params\PParams.h" />
     <ClInclude Include="..\include\BulletBird.h" />
     <ClInclude Include="..\include\BulletConstraint.h" />
