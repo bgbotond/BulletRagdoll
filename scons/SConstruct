@@ -37,6 +37,7 @@ if (not GetOption('clean')):
 	env = conf.Finish()
 
 env = SConscript('../../../blocks/MndlKit/scons/SConscript', exports = 'env')
+env = SConscript('../../../blocks/Cinder-LeapSdk/scons/SConscript', exports = 'env')
 
 SConscript('../../../scons/SConscript', exports = 'env')
 
