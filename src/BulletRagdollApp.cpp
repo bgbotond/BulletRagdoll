@@ -75,7 +75,7 @@ void BulletRagdollApp::setup()
 
 	// Start device
 	mLeap = Device::create();
-	mLeap->addCallback( &BulletRagdollApp::onFrame, this );
+	mCallbackId = mLeap->addCallback( &BulletRagdollApp::onFrame, this );
 	mActHand = -1;
 }
 
