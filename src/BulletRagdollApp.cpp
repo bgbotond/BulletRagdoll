@@ -132,7 +132,7 @@ void BulletRagdollApp::setupParams()
 	mParams.addPersistentParam( "Center of Interest", &mCameraCenterOfInterestPoint, Vec3f( 0.0f, 1.0f, 0.0f ));
 	mParams.addText( "Ragdoll" );
 	mParams.addPersistentParam( "Position" , &mPosition , Vec3f( 0.0f, 10.0f, 0.0f ));
-	mParams.addPersistentParam( "Direction", &mDirection, Vec3f( 0.0f,  0.0f, 1.0f ));
+	mParams.addPersistentParam( "Direction", &mDirection, Vec3f( 0.0f,  0.0f, -1.0f ));
 	mParams.addPersistentParam( "Normal"   , &mNormal   , Vec3f( 0.0f, -1.0f, 0.0f ));
 	mParams.addButton( "Spawn", [ this ]()
 								{
@@ -145,10 +145,7 @@ void BulletRagdollApp::setupParams()
 									if( ! mBulletBirdDebug )
 										return;
 
-									Vec3f dir  = mDirection.normalized();
-									Vec3f norm = mNormal.normalized();
-
-									mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, dir, norm );
+									mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 								} );
 
 	mParams.addPersistentParam( "Hand pos", &mHandPos, Vec3f( 0, 0, 0 ), "", true );
@@ -266,20 +263,23 @@ void BulletRagdollApp::update()
 
 		mHandPos = hand.getPosition();
 
-// 		if( ! mBulletBird )
-// 			mBulletBird = mBulletWorld.spawnBulletBird( hand.getPosition());
-// 
-// 		mBulletWorld.updateBulletBird( mBulletBird, hand.getPosition(), hand.getDirection(), hand.getNormal());
+		if( ! mBulletBird )
+			mBulletBird = mBulletWorld.spawnBulletBird( hand.getPosition());
+
+		mBulletWorld.updateBulletBird( mBulletBird, hand.getPosition(), hand.getDirection(), hand.getNormal());
 	}
 	else
 	{
-// 		if( mBulletBird )
-// 		{
-// 			mBulletWorld.removeBulletBird( mBulletBird );
-// 			mBulletBird = 0;
-// 			mHandPos = Vec3f( -1, -1, -1 );
-// 		}
+		if( mBulletBird )
+		{
+			mBulletWorld.removeBulletBird( mBulletBird );
+			mBulletBird = 0;
+			mHandPos = Vec3f( -1, -1, -1 );
+		}
 	}
+
+	if( mBulletBirdDebug )
+		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 }
 
 void BulletRagdollApp::draw()

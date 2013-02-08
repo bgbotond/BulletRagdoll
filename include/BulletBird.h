@@ -54,7 +54,7 @@ protected:
 	btVector3                mPosBody;
 	btVector3                mPosRightLeg;
 	btVector3                mPosLeftLeg;
-	float                    mHangPivot[4];
+	ci::Vec3f                mHangPivot[4];
 	btPoint2PointConstraint *mHangConstraint[4];
 
 	Shapes      mShapes;

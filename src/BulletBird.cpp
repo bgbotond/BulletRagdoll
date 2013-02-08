@@ -33,12 +33,13 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 
 	mStickSize  = 3;
 
-	mShapes.push_back( new btCylinderShape( btVector3( mBeckSize / 2, mBeckSize, mBeckSize / 2 )));
-	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                               )));
-	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                               )));
-	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                               )));
-	mShapes.push_back( new btSphereShape  ( btScalar ( mLegSize                                )));
-	mShapes.push_back( new btCylinderShape( btVector3( mFootSize * 5, mFootSize, mFootSize * 5 )));
+//	mShapes.push_back( new btCylinderShape( btVector3( mBeckSize / 2, mBeckSize, mBeckSize / 2 ))); // -> BODYPART_BECK
+	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                         )); // -> BODYPART_BECK
+	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                               ))); // -> BODYPART_HEAD
+	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                               ))); // -> BODYPART_NECK
+	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                               ))); // -> BODYPART_BODY
+	mShapes.push_back( new btSphereShape  ( btScalar ( mLegSize                                ))); // -> BODYPART_LEG
+	mShapes.push_back( new btCylinderShape( btVector3( mFootSize * 5, mFootSize, mFootSize * 5 ))); // -> BODYPART_FOOT
 
 	float neckLength = mBodySize + mNeckPart * 2 * mNeckSize + mHeadSize;
 	float legLength  = mBodySize + mLegPart  * 2 * mLegSize  - mLegSize;
@@ -279,35 +280,66 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 		mOwnerWorld->addConstraint( coneC, false);
 	}
 
+	// beck
+/*
+	rigidBodyA = getBody( BODYPART_HEAD );
+	rigidBodyB = getBody( BODYPART_BECK );
+	sizeA = mHeadSize;
+	sizeB = mBeckSize;
+	pointC = new btPoint2PointConstraint( *rigidBodyA, *rigidBodyB, CinderBullet::convert( Vec3f( 0, 0, sizeA ) ), CinderBullet::convert( Vec3f( 0, -sizeB, 0 ) ) );
+	mConstraints.push_back( pointC );
+	pointC->setDbgDrawSize( CONSTRAINT_DEBUG_SIZE );
+
+	pointC->m_setting.m_impulseClamp = 0;
+	pointC->m_setting.m_tau          = 0.01;
+
+	mOwnerWorld->addConstraint( pointC, false );
+*/
+	rotate = Quatf( Vec3f::xAxis(), Vec3f::yAxis());
+	rigidBodyA = getBody( BODYPART_HEAD );
+	rigidBodyB = getBody( BODYPART_BECK );
+	sizeA = mHeadSize;
+	sizeB = mBeckSize;
+	localA.setIdentity(); localB.setIdentity();
+	localA.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), Vec3f::zAxis()))); localA.setOrigin( CinderBullet::convert( Vec3f( 0, 0     , sizeA  ) ) );
+	localB.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), Vec3f::yAxis()))); localB.setOrigin( CinderBullet::convert( Vec3f( 0, -sizeB, 0      ) ) );
+	coneC = new btConeTwistConstraint( *rigidBodyA, *rigidBodyB, localA, localB );
+	coneC->setLimit( RADIAN( 45 ), RADIAN( 45 ), 0 );
+	mConstraints.push_back( coneC );
+	coneC->setDbgDrawSize( CONSTRAINT_DEBUG_SIZE );
+
+	mOwnerWorld->addConstraint( coneC, false);
+
+
 	btVector3 position;
 	btVector3 pivot;
 
-	position = CinderBullet::convert( headPos + offset );
-	pivot    = getBody( BODYPART_HEAD )->getCenterOfMassTransform().inverse() * position;
+	mHangPivot[0] = headPos + offset;
+//	pivot    = getBody( BODYPART_HEAD )->getCenterOfMassTransform().inverse() * mHangPivot[0];
 	pivot = btVector3( 0, 0, 0 );
 	mHangConstraint[0] = new btPoint2PointConstraint( *getBody( BODYPART_HEAD ), pivot );
 	mOwnerWorld->addConstraint( mHangConstraint[0], false );
 	mHangConstraint[0]->m_setting.m_impulseClamp = 0;
 	mHangConstraint[0]->m_setting.m_tau          = 0.01;
 
-	position = CinderBullet::convert( bodyPos + offset );
-	pivot    = getBody( BODYPART_BODY )->getCenterOfMassTransform().inverse() * position;
+	mHangPivot[1] = bodyPos + offset;
+//	pivot    = getBody( BODYPART_BODY )->getCenterOfMassTransform().inverse() * mHangPivot[1];
 	pivot = btVector3( 0, 0, 0 );
 	mHangConstraint[1] = new btPoint2PointConstraint( *getBody( BODYPART_BODY ), pivot );
 	mOwnerWorld->addConstraint( mHangConstraint[1], false );
 	mHangConstraint[1]->m_setting.m_impulseClamp = 0;
 	mHangConstraint[1]->m_setting.m_tau          = 0.01;
 
-	position = CinderBullet::convert( leftLegPos + offset );
-	pivot    = getBody( BODYPART_LEG, 0 )->getCenterOfMassTransform().inverse() * position;
+	mHangPivot[2] = leftLegPos + offset;
+//	pivot    = getBody( BODYPART_LEG, 0 )->getCenterOfMassTransform().inverse() * mHangPivot[2];
 	pivot = btVector3( 0, 0, 0 );
 	mHangConstraint[2] = new btPoint2PointConstraint( *getBody( BODYPART_LEG, 0 ), pivot );
 	mOwnerWorld->addConstraint( mHangConstraint[2], false );
 	mHangConstraint[2]->m_setting.m_impulseClamp = 0;
 	mHangConstraint[2]->m_setting.m_tau          = 0.01;
 
-	position = CinderBullet::convert( rightLegPos + offset );
-	pivot    = getBody( BODYPART_LEG, mLegPart )->getCenterOfMassTransform().inverse() * position;
+	mHangPivot[3] = rightLegPos + offset;
+//	pivot    = getBody( BODYPART_LEG, mLegPart )->getCenterOfMassTransform().inverse() * mHangPivot[3];
 	pivot = btVector3( 0, 0, 0 );
 	mHangConstraint[3] = new btPoint2PointConstraint( *getBody( BODYPART_LEG, mLegPart ), pivot );
 	mOwnerWorld->addConstraint( mHangConstraint[3], false );
@@ -353,7 +385,7 @@ void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec
 {
 // 	ci::Vec3f cross = dir.cross( norm );
 // 	cross.normalize();
-// 
+
 // 	ci::Vec3f posHang0 = pos + dir   * mStickSize;
 // 	ci::Vec3f posHang1 = pos - dir   * mStickSize;
 // 	ci::Vec3f posHang2 = pos - cross * mStickSize;
@@ -368,24 +400,31 @@ void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec
 // 	mHangConstraint[1]->setPivotB( CinderBullet::convert( posHang1 ) );
 // 	mHangConstraint[2]->setPivotB( CinderBullet::convert( posHang2 ) );
 // 	mHangConstraint[3]->setPivotB( CinderBullet::convert( posHang3 ) );
-// 
-// 	mHangConstraint[0]->m_setting.m_impulseClamp = 0.0;
-// 	mHangConstraint[0]->m_setting.m_tau          = 0.01;
-// 
-// 	mHangConstraint[1]->m_setting.m_impulseClamp = 0.0;
-// 	mHangConstraint[1]->m_setting.m_tau          = 0.01;
-// 
-// 	mHangConstraint[2]->m_setting.m_impulseClamp = 0.0;
-// 	mHangConstraint[2]->m_setting.m_tau          = 0.01;
-// 
-// 	mHangConstraint[3]->m_setting.m_impulseClamp = 0.0;
-// 	mHangConstraint[3]->m_setting.m_tau          = 0.01;
 
 // 	setPos( getBody( BODYPART_HANG, 0 ), posHang0 );
 // 	setPos( getBody( BODYPART_HANG, 1 ), posHang1 );
 // 	setPos( getBody( BODYPART_HANG, 2 ), posHang2 );
 // 	setPos( getBody( BODYPART_HANG, 3 ), posHang3 );
+
+	Quatf rotate1 = Quatf( -Vec3f::zAxis(), dir.normalized() );
+	Quatf rotate2 = Quatf( -Vec3f::yAxis(), norm.normalized() );
+
+	Quatf rotate = rotate1 * rotate2;
+
+	for( int i = 0; i < 4; ++i )
+	{
+		Vec3f pos = rotate * mHangPivot[ i ];
+// 		rotateConstraint( mHangConstraint[i], pos );
+		mHangConstraint[i]->setPivotB( CinderBullet::convert( pos ) );
+	}
 }
+
+// void BulletBird::rotateConstraint( btPoint2PointConstraint *hangConstraint, Quatf rotate )
+// {
+// 	Vec3f pos = CinderBullet::convert( hangConstraint->getRigidBodyA().getCenterOfMassTransform()( hangConstraint->getPivotInA() ) );
+// 
+// 	hangConstraint->setPivotB( CinderBullet::convert( rotate * pos ));
+// }
 
 void BulletBird::setPos( btRigidBody *rigidBody, ci::Vec3f &pos )
 {
@@ -430,26 +469,6 @@ btCollisionShape *BulletBird::getShape( BodyPart bodyPart )
 
 btRigidBody *BulletBird::getBody( BodyPart bodyPart, int count /* = 0 */ )
 {
-// 	switch( bodyPart )
-// 	{
-// 	case BODYPART_BECK : return mBodies[ 2 + mNeckPart                    ]; break;
-// 	case BODYPART_HEAD : return mBodies[ 1 + mNeckPart                    ]; break;
-// 	case BODYPART_NECK : return mBodies[ 1 + count                        ]; break;
-// 	case BODYPART_BODY : return mBodies[ 0                                ]; break;
-// 	case BODYPART_LEG  : 
-// 		if( count < mLegPart )
-// 			return mBodies[ 3 + mNeckPart + count ];
-// 		else 
-// 			return mBodies[ 4 + mNeckPart + count ];
-// 		break;
-// 	case BODYPART_FOOT :
-// 		if( count == 0 )
-// 			return mBodies[ 3 + mNeckPart + mLegPart ];
-// 		else
-// 			return mBodies[ 4 + mNeckPart + 2 * mLegPart ];
-// 		break;
-// 	}
-
 	switch( bodyPart )
 	{
 	case BODYPART_FOOT : return mBodies[ 0 + count                    ]; break;

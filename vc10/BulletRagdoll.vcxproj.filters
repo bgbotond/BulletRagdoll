@@ -9,15 +9,18 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
     <Filter Include="blocks">
       <UniqueIdentifier>{379d2024-4860-4b0a-88b3-d50bc1de9aa7}</UniqueIdentifier>
     </Filter>
     <Filter Include="blocks\mndlkit">
       <UniqueIdentifier>{6f37deef-119c-4ce7-a3f4-8fa014333906}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="blocks\Cinder-Leap">
+      <UniqueIdentifier>{de21ba7d-dc3e-41e5-8d84-61e410a84d00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +47,15 @@
     </ClInclude>
     <ClInclude Include="..\include\BulletBird.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.h">
+      <Filter>blocks\Cinder-Leap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Leap.h">
+      <Filter>blocks\Cinder-Leap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\LeapMath.h">
+      <Filter>blocks\Cinder-Leap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="..\src\BulletBird.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.cpp">
+      <Filter>blocks\Cinder-Leap</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
