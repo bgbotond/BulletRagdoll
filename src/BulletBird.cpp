@@ -31,10 +31,10 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 
 	mStringSize = 0;
 
-	mStickSize  = 3;
+	mStickSize  = 4;
 
 //	mShapes.push_back( new btCylinderShape( btVector3( mBeckSize / 2, mBeckSize, mBeckSize / 2 ))); // -> BODYPART_BECK
-	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                         )); // -> BODYPART_BECK
+	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                        )); // -> BODYPART_BECK
 	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                               ))); // -> BODYPART_HEAD
 	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                               ))); // -> BODYPART_NECK
 	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                               ))); // -> BODYPART_BODY
@@ -45,13 +45,13 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	float legLength  = mBodySize + mLegPart  * 2 * mLegSize  - mLegSize;
 
 	Vec3f offset       = Vec3f( 0, 2 * mFootSize + mLegSize, 0 );
-	Vec3f bodyPos      = Vec3f( 0, ci::math<float>::sqrt( ( legLength  * legLength  ) - 2 * ( mStickSize * mStickSize ) )            , - mStickSize );
-	Vec3f headPos      = Vec3f( 0, ci::math<float>::sqrt( ( neckLength * neckLength ) - 4 * ( mStickSize * mStickSize ) ) + bodyPos.y,   mStickSize );
-	Vec3f beckPos      = Vec3f( 0, 0, mHeadSize + mBeckSize ) + headPos;
-	Vec3f leftFootPos  = Vec3f(  mStickSize, mFootSize, 0 );
-	Vec3f rightFootPos = Vec3f( -mStickSize, mFootSize, 0 );
-	Vec3f leftLegPos   = Vec3f(  mStickSize, 0, 0 );
-	Vec3f rightLegPos  = Vec3f( -mStickSize, 0, 0 );
+	Vec3f bodyPos      = Vec3f( 0, ci::math<float>::sqrt( ( legLength  * legLength  ) - 2 * ( mStickSize * mStickSize ) )            ,   mStickSize );
+	Vec3f headPos      = Vec3f( 0, ci::math<float>::sqrt( ( neckLength * neckLength ) - 4 * ( mStickSize * mStickSize ) ) + bodyPos.y, - mStickSize );
+	Vec3f beckPos      = Vec3f( 0, 0, - mHeadSize - mBeckSize ) + headPos;
+	Vec3f leftFootPos  = Vec3f( -mStickSize, mFootSize, 0 );
+	Vec3f rightFootPos = Vec3f(  mStickSize, mFootSize, 0 );
+	Vec3f leftLegPos   = Vec3f( -mStickSize, 0, 0 );
+	Vec3f rightLegPos  = Vec3f(  mStickSize, 0, 0 );
 
 	Vec3f pos;
 	Vec3f orient;
@@ -117,7 +117,7 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 
 	// beck
 	pos    = beckPos + offset;
-	rotate = Quatf( RADIAN( 90 ), 0, 0 );
+	rotate = Quatf( RADIAN( -90 ), 0, 0 );
 	transform.setIdentity();
 	transform.setRotation( CinderBullet::convert( rotate ));
 	transform.setOrigin( CinderBullet::convert( pos ));
@@ -134,7 +134,6 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 
 	// Now setup the constraints
 	btConeTwistConstraint   *coneC;
-	btPoint2PointConstraint *pointC;
 	btTransform              localA, localB;
 
 	// left foot
@@ -301,8 +300,8 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	sizeA = mHeadSize;
 	sizeB = mBeckSize;
 	localA.setIdentity(); localB.setIdentity();
-	localA.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), Vec3f::zAxis()))); localA.setOrigin( CinderBullet::convert( Vec3f( 0, 0     , sizeA  ) ) );
-	localB.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), Vec3f::yAxis()))); localB.setOrigin( CinderBullet::convert( Vec3f( 0, -sizeB, 0      ) ) );
+	localA.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), -Vec3f::zAxis()))); localA.setOrigin( CinderBullet::convert( Vec3f( 0, 0     , -sizeA ) ) );
+	localB.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(),  Vec3f::yAxis()))); localB.setOrigin( CinderBullet::convert( Vec3f( 0, -sizeB, 0      ) ) );
 	coneC = new btConeTwistConstraint( *rigidBodyA, *rigidBodyB, localA, localB );
 	coneC->setLimit( RADIAN( 45 ), RADIAN( 45 ), 0 );
 	mConstraints.push_back( coneC );
@@ -383,48 +382,32 @@ BulletBird::~BulletBird()
 
 void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm )
 {
-// 	ci::Vec3f cross = dir.cross( norm );
-// 	cross.normalize();
+	if( pos  == Vec3f::zero()
+	 || dir  == Vec3f::zero()
+	 || norm == Vec3f::zero())
+		return;
 
-// 	ci::Vec3f posHang0 = pos + dir   * mStickSize;
-// 	ci::Vec3f posHang1 = pos - dir   * mStickSize;
-// 	ci::Vec3f posHang2 = pos - cross * mStickSize;
-// 	ci::Vec3f posHang3 = pos + cross * mStickSize;
-// 
-// 	posHang0.y -= mHangPivot[0];
-// 	posHang1.y -= mHangPivot[1];
-// 	posHang2.y -= mHangPivot[2];
-// 	posHang3.y -= mHangPivot[3];
-// 
-// 	mHangConstraint[0]->setPivotB( CinderBullet::convert( posHang0 ) );
-// 	mHangConstraint[1]->setPivotB( CinderBullet::convert( posHang1 ) );
-// 	mHangConstraint[2]->setPivotB( CinderBullet::convert( posHang2 ) );
-// 	mHangConstraint[3]->setPivotB( CinderBullet::convert( posHang3 ) );
+	ci::Vec3f dir2 = dir.normalized();
+	ci::Vec3f cross = dir2.cross( norm.normalized() );
+	cross.normalize();
 
-// 	setPos( getBody( BODYPART_HANG, 0 ), posHang0 );
-// 	setPos( getBody( BODYPART_HANG, 1 ), posHang1 );
-// 	setPos( getBody( BODYPART_HANG, 2 ), posHang2 );
-// 	setPos( getBody( BODYPART_HANG, 3 ), posHang3 );
+	ci::Vec3f transPivot[4];
 
-	Quatf rotate1 = Quatf( -Vec3f::zAxis(), dir.normalized() );
-	Quatf rotate2 = Quatf( -Vec3f::yAxis(), norm.normalized() );
-
-	Quatf rotate = rotate1 * rotate2;
+	transPivot[ 0 ] = (   dir2  * mStickSize ) - ( - Vec3f::zAxis() * mStickSize );
+	transPivot[ 1 ] = ( - dir2  * mStickSize ) - (   Vec3f::zAxis() * mStickSize );
+	transPivot[ 2 ] = (   cross * mStickSize ) - ( - Vec3f::xAxis() * mStickSize );
+	transPivot[ 3 ] = ( - cross * mStickSize ) - (   Vec3f::xAxis() * mStickSize );
 
 	for( int i = 0; i < 4; ++i )
 	{
-		Vec3f pos = rotate * mHangPivot[ i ];
-// 		rotateConstraint( mHangConstraint[i], pos );
+		Vec3f pos = mHangPivot[ i ] + transPivot[ i ];
+
+		if( pos.y < 0 )
+			pos.y = 0;
+
 		mHangConstraint[i]->setPivotB( CinderBullet::convert( pos ) );
 	}
 }
-
-// void BulletBird::rotateConstraint( btPoint2PointConstraint *hangConstraint, Quatf rotate )
-// {
-// 	Vec3f pos = CinderBullet::convert( hangConstraint->getRigidBodyA().getCenterOfMassTransform()( hangConstraint->getPivotInA() ) );
-// 
-// 	hangConstraint->setPivotB( CinderBullet::convert( rotate * pos ));
-// }
 
 void BulletBird::setPos( btRigidBody *rigidBody, ci::Vec3f &pos )
 {

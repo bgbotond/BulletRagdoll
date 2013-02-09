@@ -56,6 +56,8 @@ protected:
 	void                    onFrame( LeapSdk::Frame frame );
 	int                     mActHand;
 	Vec3f                   mHandPos;
+	Vec3f                   mHandDir;
+	Vec3f                   mHandNorm;
 };
 
 void BulletRagdollApp::setup()
@@ -148,7 +150,9 @@ void BulletRagdollApp::setupParams()
 									mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 								} );
 
-	mParams.addPersistentParam( "Hand pos", &mHandPos, Vec3f( 0, 0, 0 ), "", true );
+	mParams.addPersistentParam( "Hand pos" , &mHandPos , Vec3f( -1, -1, -1 ), "", true );
+	mParams.addPersistentParam( "Hand dir" , &mHandDir , Vec3f( -1, -1, -1 ), "", true );
+	mParams.addPersistentParam( "Hand norm", &mHandNorm, Vec3f( -1, -1, -1 ), "", true );
 }
 
 void BulletRagdollApp::mouseDown( MouseEvent event )
@@ -261,12 +265,14 @@ void BulletRagdollApp::update()
 	{
 		Hand hand = mHands[ mActHand ];
 
-		mHandPos = hand.getPosition();
+		mHandPos  = hand.getPosition();
+		mHandDir  = hand.getDirection();
+		mHandNorm = hand.getNormal();
 
 		if( ! mBulletBird )
-			mBulletBird = mBulletWorld.spawnBulletBird( hand.getPosition());
+			mBulletBird = mBulletWorld.spawnBulletBird( mHandPos );
 
-		mBulletWorld.updateBulletBird( mBulletBird, hand.getPosition(), hand.getDirection(), hand.getNormal());
+		mBulletWorld.updateBulletBird( mBulletBird, mHandPos, mHandDir, mHandNorm );
 	}
 	else
 	{
@@ -275,11 +281,13 @@ void BulletRagdollApp::update()
 			mBulletWorld.removeBulletBird( mBulletBird );
 			mBulletBird = 0;
 			mHandPos = Vec3f( -1, -1, -1 );
+			mHandDir = Vec3f( -1, -1, -1 );
+			mHandNorm = Vec3f( -1, -1, -1 );
 		}
 	}
 
-	if( mBulletBirdDebug )
-		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
+// 	if( mBulletBirdDebug )
+// 		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 }
 
 void BulletRagdollApp::draw()
@@ -292,6 +300,14 @@ void BulletRagdollApp::draw()
 
 	mBulletWorld.draw();
 	mndl::kit::params::PInterfaceGl::draw();
+
+	if( mBulletBird )
+	{
+		glColor4ub( 255, 0, 0, 255 );
+		gl::drawVector( Vec3f::zero(), mHandDir * 3, 1, .5 );
+		glColor4ub( 0, 255, 0, 255 );
+		gl::drawVector( Vec3f::zero(), mHandNorm * 3, 1, .5 );
+	}
 }
 
 void BulletRagdollApp::resize()
