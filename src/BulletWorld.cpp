@@ -27,6 +27,7 @@ void BulletWorld::setup()
 	mTime = ci::app::App::get()->getElapsedSeconds();
 	initPhysics();
 	setupParams();
+	BulletBird::setupParams();
 }
 
 void BulletWorld::update()
@@ -64,7 +65,7 @@ void BulletWorld::update()
 
 void BulletWorld::draw()
 {
-	if( /*mDrawBulletDebug && */mDynamicsWorld != NULL )
+	if( mDynamicsWorld != NULL )
 		mDynamicsWorld->debugDrawWorld();
 }
 
@@ -80,7 +81,6 @@ void BulletWorld::initPhysics()
 	mSolver     = new btSequentialImpulseConstraintSolver;
 
 	mDynamicsWorld = new btDiscreteDynamicsWorld( mDispatcher, mBroadphase, mSolver, mCollisionConfiguration );
-//	mDynamicsWorld->setGravity( btVector3( 0, 0, 0 ) );
 	mDynamicsWorld->setGravity( btVector3( 0, -9.81, 0 ) );
 
 	mDebugDrawer = new CinderBulletDebugDrawer();
@@ -165,6 +165,9 @@ void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 BulletBird *BulletWorld::spawnBulletBird( const ci::Vec3f &pos )
 {
 	ci::Vec3f posConv = pos / 10;
+
+	posConv = ci::Vec3f( 0, 10, 0 );
+
 	BulletBird *bulletBird = new BulletBird( mDynamicsWorld, posConv );
 	mBulletBirds.push_back( bulletBird );
 

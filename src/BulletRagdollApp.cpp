@@ -43,6 +43,7 @@ protected:
 	float     mCameraFov;
 	Vec3f     mCameraEyePoint;
 	Vec3f     mCameraCenterOfInterestPoint;
+	static const int mStepKey = 3;
 
 	// ragdoll
 	Vec3f     mPosition;
@@ -213,6 +214,46 @@ void BulletRagdollApp::keyDown( KeyEvent event )
 	case KeyEvent::KEY_l:
 		{
 			mCameraLock = ! mCameraLock;
+		}
+		break;
+	case KeyEvent::KEY_LEFT:
+		{
+			if( ! mCameraLock )
+			{
+				mMayaCam.mouseDown( Vec2i( mStepKey, 0 ));
+				mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
+				mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
+			}
+		}
+		break;
+	case KeyEvent::KEY_RIGHT:
+		{
+			if( ! mCameraLock )
+			{
+				mMayaCam.mouseDown( Vec2i( 0       , 0 ));
+				mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
+				mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
+			}
+		}
+		break;
+	case KeyEvent::KEY_UP:
+		{
+			if( ! mCameraLock )
+			{
+				mMayaCam.mouseDown( Vec2i( 0, mStepKey ));
+				mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
+				mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
+			}
+		}
+		break;
+	case KeyEvent::KEY_DOWN:
+		{
+			if( ! mCameraLock )
+			{
+				mMayaCam.mouseDown( Vec2i( 0, 0        ));
+				mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
+				mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
+			}
 		}
 		break;
 	case KeyEvent::KEY_ESCAPE:

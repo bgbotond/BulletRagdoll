@@ -3,6 +3,8 @@
 
 #include <vector>
 #include "btBulletDynamicsCommon.h"
+#include "mndlkit/params/PParams.h"
+#include "HangConstraint.h"
 
 class BulletBird
 {
@@ -19,6 +21,7 @@ class BulletBird
 typedef std::vector< btCollisionShape  * > Shapes;
 typedef std::vector< btRigidBody       * > Bodies;
 typedef std::vector< btTypedConstraint * > Constraints;
+typedef std::vector< HangConstraint    * > HangConstraints;
 
 public:
 	BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffset );
@@ -26,40 +29,49 @@ public:
 
 	void update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
 
+	static void setupParams();
+
 protected:
 	btRigidBody *localCreateRigidBody( btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
 
 	btCollisionShape  *getShape( BodyPart bodyPart );
 	btRigidBody       *getBody ( BodyPart bodyPart, int count = 0 );
 
-	void setPos( btRigidBody *rigidBody, ci::Vec3f &pos );
-
 protected:
 	btDynamicsWorld   *mOwnerWorld;
 
-	float       mBeckSize;  // cylinder shape
-	float       mHeadSize;  // sphere shape
-	float       mNeckSize;  // sphere shape
-	float       mBodySize;  // sphere shape
-	float       mLegSize;   // cylinder shape
-	float       mFootSize;  // sphere shape
+	static mndl::kit::params::PInterfaceGl            mParams;
+	static float       mBeckSize;   // cylinder shape
+	static float       mHeadSize;   // sphere shape
+	static float       mNeckSize;   // sphere shape
+	static float       mBodySize;   // sphere shape
+	static float       mLegSize;    // cylinder shape
+	static float       mFootSize;   // sphere shape
+	static float       mStickSize;  // control cross size
 
-	int         mNeckPart;  // count of neck sphere
-	int         mLegPart;   // count of leg  sphere
-	int         mStringSize; // size of string from head
+	static int         mNeckPart;   // count of neck sphere
+	static int         mLegPart;    // count of leg  sphere
+	static int         mStringSize; // size of string from head
 
-	float       mStickSize;
+	static float       mTau;
+	static float       mDamping;
+	static float       mImpulseClamp;
 
 	btVector3                mPosHead;
 	btVector3                mPosBody;
 	btVector3                mPosRightLeg;
 	btVector3                mPosLeftLeg;
-	ci::Vec3f                mHangPivot[4];
-	btPoint2PointConstraint *mHangConstraint[4];
 
-	Shapes      mShapes;
-	Bodies      mBodies;
-	Constraints mConstraints;
+	ci::Vec3f                mPosHangCenter;
+	ci::Vec3f                mPosHangFront;
+	ci::Vec3f                mPosHangBack;
+	ci::Vec3f                mPosHangLeft;
+	ci::Vec3f                mPosHangRight;
+
+	Shapes          mShapes;
+	Bodies          mBodies;
+	Constraints     mConstraints;
+	HangConstraints mHangConstraints;
 };
 
 #endif // __BulletBird_H__

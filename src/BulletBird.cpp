@@ -15,36 +15,54 @@
 
 using namespace ci;
 
+/*
+      hb      head beck
+      n       neck
+      n       neck
+      n       neck
+      n       neck
+      b       body
+     l l      leg
+    l   l     leg
+   l     l    leg
+  l       l   leg
+ f         f  foot
+*/
+
+mndl::kit::params::PInterfaceGl   BulletBird::mParams;
+float                             BulletBird::mBeckSize   = 1.0; // cylinder shape
+float                             BulletBird::mHeadSize   = 2.0; // sphere shape
+float                             BulletBird::mNeckSize   = 1.0; // sphere shape
+float                             BulletBird::mBodySize   = 3.0; // sphere shape
+float                             BulletBird::mLegSize    = 1.0; // cylinder shape
+float                             BulletBird::mFootSize   = 0.3; // sphere shape
+float                             BulletBird::mStickSize  = 4.0; // control cross size
+
+int                               BulletBird::mNeckPart   = 4  ; // count of neck sphere
+int                               BulletBird::mLegPart    = 4  ; // count of leg  sphere
+int                               BulletBird::mStringSize = 0.0; // size of string from head
+
+float                             BulletBird::mTau          = 0.01;
+float                             BulletBird::mDamping      = 1.0;
+float                             BulletBird::mImpulseClamp = 0.0;
+
+
 BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffset )
 : mOwnerWorld( ownerWorld )
 {
-	mBodySize = 3;
-	mNeckSize = 1;
-	mHeadSize = 2;
-	mBeckSize = 1;
+	float hangSize = 1;
 
-	mLegSize  = 1;
-	mFootSize = 0.3;
-
-	mNeckPart = 4;
-	mLegPart  = 4;
-
-	mStringSize = 0;
-
-	mStickSize  = 4;
-
-//	mShapes.push_back( new btCylinderShape( btVector3( mBeckSize / 2, mBeckSize, mBeckSize / 2 ))); // -> BODYPART_BECK
 	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                        )); // -> BODYPART_BECK
 	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                               ))); // -> BODYPART_HEAD
 	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                               ))); // -> BODYPART_NECK
 	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                               ))); // -> BODYPART_BODY
 	mShapes.push_back( new btSphereShape  ( btScalar ( mLegSize                                ))); // -> BODYPART_LEG
-	mShapes.push_back( new btCylinderShape( btVector3( mFootSize * 5, mFootSize, mFootSize * 5 ))); // -> BODYPART_FOOT
+	mShapes.push_back( new btCylinderShape( btVector3( mFootSize * 8, mFootSize, mFootSize * 8 ))); // -> BODYPART_FOOT
 
 	float neckLength = mBodySize + mNeckPart * 2 * mNeckSize + mHeadSize;
 	float legLength  = mBodySize + mLegPart  * 2 * mLegSize  - mLegSize;
 
-	Vec3f offset       = Vec3f( 0, 2 * mFootSize + mLegSize, 0 );
+	Vec3f offset       = Vec3f( 0, 2 * mFootSize + mLegSize, 0 ) +  worldOffset;
 	Vec3f bodyPos      = Vec3f( 0, ci::math<float>::sqrt( ( legLength  * legLength  ) - 2 * ( mStickSize * mStickSize ) )            ,   mStickSize );
 	Vec3f headPos      = Vec3f( 0, ci::math<float>::sqrt( ( neckLength * neckLength ) - 4 * ( mStickSize * mStickSize ) ) + bodyPos.y, - mStickSize );
 	Vec3f beckPos      = Vec3f( 0, 0, - mHeadSize - mBeckSize ) + headPos;
@@ -53,19 +71,25 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	Vec3f leftLegPos   = Vec3f( -mStickSize, 0, 0 );
 	Vec3f rightLegPos  = Vec3f(  mStickSize, 0, 0 );
 
+	mPosHangCenter     = Vec3f( 0, headPos.y + mStringSize, 0 );
+	mPosHangFront      = mPosHangCenter + offset + Vec3f( 0, 0, -mStickSize );
+	mPosHangBack       = mPosHangCenter + offset + Vec3f( 0, 0,  mStickSize );
+	mPosHangLeft       = mPosHangCenter + offset + Vec3f( -mStickSize, 0, 0 );
+	mPosHangRight      = mPosHangCenter + offset + Vec3f(  mStickSize, 0, 0 );
+
 	Vec3f pos;
 	Vec3f orient;
 	Quatf rotate;
 	btTransform transform;
 
 	// left foot
-	pos = leftFootPos;
+	pos = leftFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
 	mBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
 
 	// right foot
-	pos = rightFootPos;
+	pos = rightFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
 	mBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
@@ -135,6 +159,7 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	// Now setup the constraints
 	btConeTwistConstraint   *coneC;
 	btTransform              localA, localB;
+
 
 	// left foot
 	rotate = Quatf( 0, 0, RADIAN( 90 ));
@@ -280,28 +305,13 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	}
 
 	// beck
-/*
-	rigidBodyA = getBody( BODYPART_HEAD );
-	rigidBodyB = getBody( BODYPART_BECK );
-	sizeA = mHeadSize;
-	sizeB = mBeckSize;
-	pointC = new btPoint2PointConstraint( *rigidBodyA, *rigidBodyB, CinderBullet::convert( Vec3f( 0, 0, sizeA ) ), CinderBullet::convert( Vec3f( 0, -sizeB, 0 ) ) );
-	mConstraints.push_back( pointC );
-	pointC->setDbgDrawSize( CONSTRAINT_DEBUG_SIZE );
-
-	pointC->m_setting.m_impulseClamp = 0;
-	pointC->m_setting.m_tau          = 0.01;
-
-	mOwnerWorld->addConstraint( pointC, false );
-*/
-	rotate = Quatf( Vec3f::xAxis(), Vec3f::yAxis());
 	rigidBodyA = getBody( BODYPART_HEAD );
 	rigidBodyB = getBody( BODYPART_BECK );
 	sizeA = mHeadSize;
 	sizeB = mBeckSize;
 	localA.setIdentity(); localB.setIdentity();
 	localA.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(), -Vec3f::zAxis()))); localA.setOrigin( CinderBullet::convert( Vec3f( 0, 0     , -sizeA ) ) );
-	localB.setRotation( CinderBullet::convert( Quatf( Vec3f::xAxis(),  Vec3f::yAxis()))); localB.setOrigin( CinderBullet::convert( Vec3f( 0, -sizeB, 0      ) ) );
+	localB.setRotation( CinderBullet::convert( Quatf( -Vec3f::zAxis(),  Vec3f::yAxis()) * Quatf( Vec3f::xAxis(),  Vec3f::yAxis()))); localB.setOrigin( CinderBullet::convert( Vec3f( 0, -sizeB, 0      ) ) );
 	coneC = new btConeTwistConstraint( *rigidBodyA, *rigidBodyB, localA, localB );
 	coneC->setLimit( RADIAN( 45 ), RADIAN( 45 ), 0 );
 	mConstraints.push_back( coneC );
@@ -309,42 +319,39 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 
 	mOwnerWorld->addConstraint( coneC, false);
 
+	for( Constraints::iterator it = mConstraints.begin(); it != mConstraints.end(); ++it )
+	{
+		btConeTwistConstraint *constraint = static_cast< btConeTwistConstraint * >( *it );
 
-	btVector3 position;
-	btVector3 pivot;
+		constraint->setDamping( .1 );
+	}
 
-	mHangPivot[0] = headPos + offset;
-//	pivot    = getBody( BODYPART_HEAD )->getCenterOfMassTransform().inverse() * mHangPivot[0];
-	pivot = btVector3( 0, 0, 0 );
-	mHangConstraint[0] = new btPoint2PointConstraint( *getBody( BODYPART_HEAD ), pivot );
-	mOwnerWorld->addConstraint( mHangConstraint[0], false );
-	mHangConstraint[0]->m_setting.m_impulseClamp = 0;
-	mHangConstraint[0]->m_setting.m_tau          = 0.01;
+	HangConstraint *hangConstraint;
+	Vec3f hangPos;
 
-	mHangPivot[1] = bodyPos + offset;
-//	pivot    = getBody( BODYPART_BODY )->getCenterOfMassTransform().inverse() * mHangPivot[1];
-	pivot = btVector3( 0, 0, 0 );
-	mHangConstraint[1] = new btPoint2PointConstraint( *getBody( BODYPART_BODY ), pivot );
-	mOwnerWorld->addConstraint( mHangConstraint[1], false );
-	mHangConstraint[1]->m_setting.m_impulseClamp = 0;
-	mHangConstraint[1]->m_setting.m_tau          = 0.01;
+	pos     = headPos + offset;
+	hangPos = mPosHangFront;
+	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_HEAD ), pos );
+	mHangConstraints.push_back( hangConstraint );
+	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
 
-	mHangPivot[2] = leftLegPos + offset;
-//	pivot    = getBody( BODYPART_LEG, 0 )->getCenterOfMassTransform().inverse() * mHangPivot[2];
-	pivot = btVector3( 0, 0, 0 );
-	mHangConstraint[2] = new btPoint2PointConstraint( *getBody( BODYPART_LEG, 0 ), pivot );
-	mOwnerWorld->addConstraint( mHangConstraint[2], false );
-	mHangConstraint[2]->m_setting.m_impulseClamp = 0;
-	mHangConstraint[2]->m_setting.m_tau          = 0.01;
+	pos     = bodyPos + offset;
+	hangPos = mPosHangBack;
+	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_BODY ), pos );
+	mHangConstraints.push_back( hangConstraint );
+	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
 
-	mHangPivot[3] = rightLegPos + offset;
-//	pivot    = getBody( BODYPART_LEG, mLegPart )->getCenterOfMassTransform().inverse() * mHangPivot[3];
-	pivot = btVector3( 0, 0, 0 );
-	mHangConstraint[3] = new btPoint2PointConstraint( *getBody( BODYPART_LEG, mLegPart ), pivot );
-	mOwnerWorld->addConstraint( mHangConstraint[3], false );
-	mHangConstraint[3]->m_setting.m_impulseClamp = 0;
-	mHangConstraint[3]->m_setting.m_tau          = 0.01;
+	pos     = leftLegPos + offset;
+	hangPos = mPosHangLeft;
+	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_LEG, 0 ), pos );
+	mHangConstraints.push_back( hangConstraint );
+	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
 
+	pos     = rightLegPos + offset;
+	hangPos = mPosHangRight;
+	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_LEG, mLegPart ), pos );
+	mHangConstraints.push_back( hangConstraint );
+	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
 }
 
 BulletBird::~BulletBird()
@@ -356,10 +363,10 @@ BulletBird::~BulletBird()
 		delete *it;
 	}
 
-	for( int i = 0; i < 4; ++i )
+	for( HangConstraints::iterator it = mHangConstraints.begin(); it != mHangConstraints.end(); ++it )
 	{
-		mOwnerWorld->removeConstraint( mHangConstraint[i] );
-		delete mHangConstraint[i];
+		mOwnerWorld->removeConstraint( (*it)->mConstraint );
+		delete *it;
 	}
 
 	for( Bodies::iterator it = mBodies.begin(); it != mBodies.end(); ++it )
@@ -391,40 +398,20 @@ void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec
 	ci::Vec3f cross = dir2.cross( norm.normalized() );
 	cross.normalize();
 
-	ci::Vec3f transPivot[4];
+	ci::Vec3f hangPos[4];
 
-	transPivot[ 0 ] = (   dir2  * mStickSize ) - ( - Vec3f::zAxis() * mStickSize );
-	transPivot[ 1 ] = ( - dir2  * mStickSize ) - (   Vec3f::zAxis() * mStickSize );
-	transPivot[ 2 ] = (   cross * mStickSize ) - ( - Vec3f::xAxis() * mStickSize );
-	transPivot[ 3 ] = ( - cross * mStickSize ) - (   Vec3f::xAxis() * mStickSize );
+	hangPos[ 0 ] = mPosHangFront + (   dir2  * mStickSize ) - ( - Vec3f::zAxis() * mStickSize );
+	hangPos[ 1 ] = mPosHangBack  + ( - dir2  * mStickSize ) - (   Vec3f::zAxis() * mStickSize );
+	hangPos[ 2 ] = mPosHangLeft  + (   cross * mStickSize ) - ( - Vec3f::xAxis() * mStickSize );
+	hangPos[ 3 ] = mPosHangRight + ( - cross * mStickSize ) - (   Vec3f::xAxis() * mStickSize );
 
 	for( int i = 0; i < 4; ++i )
 	{
-		Vec3f pos = mHangPivot[ i ] + transPivot[ i ];
-
-		if( pos.y < 0 )
-			pos.y = 0;
-
-		mHangConstraint[i]->setPivotB( CinderBullet::convert( pos ) );
+		mHangConstraints[i]->update( hangPos[i] );
+		mHangConstraints[i]->mConstraint->m_setting.m_damping      = mDamping;
+		mHangConstraints[i]->mConstraint->m_setting.m_impulseClamp = mImpulseClamp;
+		mHangConstraints[i]->mConstraint->m_setting.m_tau          = mTau;
 	}
-}
-
-void BulletBird::setPos( btRigidBody *rigidBody, ci::Vec3f &pos )
-{
-// 	rigidBody->translate( CinderBullet::convert( pos ));
-// 	btMotionState *motionState = rigidBody->getMotionState();
-// 
-// 	if( motionState )
-// 	{
-// 		btTransform trans;
-// 		motionState->getWorldTransform( trans );
-// 
-// 		trans.setOrigin( CinderBullet::convert( pos ));
-// 
-// 		motionState->setWorldTransform( trans );
-// 
-// 		rigidBody->translate( btVector3( CinderBullet::convert( pos ) - trans.getOrigin()));
-// 	}
 }
 
 btRigidBody *BulletBird::localCreateRigidBody( btScalar mass, const btTransform &startTransform, btCollisionShape *shape )
@@ -454,13 +441,38 @@ btRigidBody *BulletBird::getBody( BodyPart bodyPart, int count /* = 0 */ )
 {
 	switch( bodyPart )
 	{
-	case BODYPART_FOOT : return mBodies[ 0 + count                    ]; break;
-	case BODYPART_LEG  : return mBodies[ 2 + count                    ]; break;
-	case BODYPART_BODY : return mBodies[ 2 + 2 * mLegPart             ]; break;
-	case BODYPART_NECK : return mBodies[ 3 + 2 * mLegPart + count     ]; break;
-	case BODYPART_HEAD : return mBodies[ 3 + 2 * mLegPart + mNeckPart ]; break;
-	case BODYPART_BECK : return mBodies[ 4 + 2 * mLegPart + mNeckPart ]; break;
+	case BODYPART_FOOT : return mBodies[ 0 + count                            ]; break;
+	case BODYPART_LEG  : return mBodies[ 2 + count                            ]; break;
+	case BODYPART_BODY : return mBodies[ 2 + 2 * mLegPart                     ]; break;
+	case BODYPART_NECK : return mBodies[ 3 + 2 * mLegPart + count             ]; break;
+	case BODYPART_HEAD : return mBodies[ 3 + 2 * mLegPart + mNeckPart         ]; break;
+	case BODYPART_BECK : return mBodies[ 4 + 2 * mLegPart + mNeckPart         ]; break;
 	}
 
 	return 0;
+}
+
+void BulletBird::setupParams()
+{
+	mParams = mndl::kit::params::PInterfaceGl( "Bird", ci::Vec2i( 250, 350 ), ci::Vec2i( 500, 50 ) );
+	mParams.addPersistentSizeAndPosition();
+
+	mParams.addText( "Body" );
+	mParams.addPersistentParam( "Beck size" , &mBeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParams.addPersistentParam( "Head size" , &mHeadSize , 2.0f, "min=0.5 max=5.0 step=0.1" );
+	mParams.addPersistentParam( "Neck size" , &mNeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParams.addPersistentParam( "Body size" , &mBodySize , 3.0f, "min=0.5 max=5.0 step=0.1" );
+	mParams.addPersistentParam( "Leg size"  , &mLegSize  , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParams.addPersistentParam( "Foot size" , &mFootSize , 0.3f, "min=0.1 max=3.0 step=0.1" );
+	mParams.addPersistentParam( "Stick size", &mStickSize, 4.0f, "min=0.5 max=5.0 step=0.1" );
+
+	mParams.addPersistentParam( "Neck part" , &mNeckPart , 4   , "min=2 max=8 step=1" );
+	mParams.addPersistentParam( "Leg part"  , &mLegPart  , 4   , "min=2 max=8 step=1" );
+
+	mParams.addPersistentParam( "String size", &mStringSize, 0.0f, "min=0.0 max=5.0 step=0.1" );
+
+	mParams.addText( "Hang constraints" );
+	mParams.addPersistentParam( "Tau"          , &mTau         , 0.01f,  "min=0.0 max=1.0 step=0.01" );
+	mParams.addPersistentParam( "Damping"      , &mDamping     , 1.0f,  "min=0.0 max=1.0 step=0.01" );
+	mParams.addPersistentParam( "Impulse clamp", &mImpulseClamp, 0.0f,  "min=0.0 max=10.0 step=0.1" );
 }

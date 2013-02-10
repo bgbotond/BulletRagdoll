@@ -114,6 +114,7 @@
     <ClCompile Include="..\src\BulletRagdollApp.cpp" />
     <ClCompile Include="..\src\CinderBulletDebugDrawer.cpp" />
     <ClCompile Include="..\src\BulletRagdoll.cpp" />
+    <ClCompile Include="..\src\HangConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.h" />
@@ -126,6 +127,7 @@
     <ClInclude Include="..\include\CinderBullet.h" />
     <ClInclude Include="..\include\CinderBulletDebugDrawer.h" />
     <ClInclude Include="..\include\BulletRagdoll.h" />
+    <ClInclude Include="..\include\HangConstraint.h" />
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
