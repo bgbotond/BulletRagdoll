@@ -57,9 +57,6 @@
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\LeapMath.h">
       <Filter>blocks\Cinder-Leap</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\HangConstraint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -95,9 +92,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.cpp">
       <Filter>blocks\Cinder-Leap</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\HangConstraint.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

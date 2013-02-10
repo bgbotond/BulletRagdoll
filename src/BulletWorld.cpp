@@ -4,13 +4,14 @@
 #include "BulletWorld.h"
 #include "BulletRagdoll.h"
 #include "BulletBird.h"
+#include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 
 BulletWorld::BulletWorld()
 : mCollisionConfiguration( NULL )
 , mDispatcher( NULL )
 , mBroadphase( NULL )
 , mSolver( NULL )
-, mDynamicsWorld( NULL )
+, mSoftRigidDynamicsWorld( NULL )
 , mDebugDrawer( NULL )
 , mDragging( false )
 {
@@ -32,8 +33,11 @@ void BulletWorld::setup()
 
 void BulletWorld::update()
 {
-	if( mGravity != CinderBullet::convert( mDynamicsWorld->getGravity()))
-		mDynamicsWorld->setGravity( CinderBullet::convert( mGravity ));
+	if( mGravity != CinderBullet::convert( mSoftRigidDynamicsWorld->getGravity()))
+	{
+		mSoftRigidDynamicsWorld->setGravity( CinderBullet::convert( mGravity ));
+		mSoftBodyWorldInfo.m_gravity = CinderBullet::convert( mGravity );
+	}
 
 	for( int i = 0; i < DEBUG_DRAW_NUM; ++i )
 	{
@@ -50,41 +54,47 @@ void BulletWorld::update()
 	if( ellapsedTime > minFPS )
 		ellapsedTime = minFPS;
 
-	if( mDynamicsWorld )
+	if( mSoftRigidDynamicsWorld )
 	{
 		if( mSimulateOne || mSimulateAlways )
 		{
-			mDynamicsWorld->stepSimulation( ellapsedTime / 1000000.f );
+			mSoftRigidDynamicsWorld->stepSimulation( ellapsedTime / 1000000.f );
 			mSimulateOne = false;
 		}
 
 		//optional but useful: debug drawing
-		mDynamicsWorld->debugDrawWorld();
+		mSoftRigidDynamicsWorld->debugDrawWorld();
 	}
 }
 
 void BulletWorld::draw()
 {
-	if( mDynamicsWorld != NULL )
-		mDynamicsWorld->debugDrawWorld();
+	if( mSoftRigidDynamicsWorld != NULL )
+		mSoftRigidDynamicsWorld->debugDrawWorld();
 }
 
 void BulletWorld::initPhysics()
 {
 	mCollisionConfiguration = new btDefaultCollisionConfiguration();
 	mDispatcher             = new btCollisionDispatcher( mCollisionConfiguration );
+	mSoftBodyWorldInfo.m_dispatcher = mDispatcher;
 
 	btVector3 worldAabbMin( -10000, -10000, -10000 );
 	btVector3 worldAabbMax(  10000,  10000,  10000 );
 	mBroadphase = new btAxisSweep3( worldAabbMin, worldAabbMax );
+	mSoftBodyWorldInfo.m_broadphase = mBroadphase;
 
 	mSolver     = new btSequentialImpulseConstraintSolver;
 
-	mDynamicsWorld = new btDiscreteDynamicsWorld( mDispatcher, mBroadphase, mSolver, mCollisionConfiguration );
-	mDynamicsWorld->setGravity( btVector3( 0, -9.81, 0 ) );
+	mSoftRigidDynamicsWorld = new btSoftRigidDynamicsWorld( mDispatcher, mBroadphase, mSolver, mCollisionConfiguration );
+	mSoftRigidDynamicsWorld->setGravity( btVector3( 0, -9.81, 0 ) );
+	mSoftBodyWorldInfo.m_gravity.setValue( 0, -9.81, 0 );
+	mSoftBodyWorldInfo.m_sparsesdf.Initialize();
+
+	mSoftRigidDynamicsWorld->getDispatchInfo().m_enableSPU = true;
 
 	mDebugDrawer = new CinderBulletDebugDrawer();
-	mDynamicsWorld->setDebugDrawer( mDebugDrawer );
+	mSoftRigidDynamicsWorld->setDebugDrawer( mDebugDrawer );
 
 	// Setup a big ground box
 	{
@@ -94,7 +104,7 @@ void BulletWorld::initPhysics()
 		btTransform groundTransform;
 		groundTransform.setIdentity();
 		groundTransform.setOrigin( btVector3( 0, -10, 0 ));
-		createRigidBody( mDynamicsWorld, btScalar( 0 ), groundTransform, groundShape );
+		createRigidBody( mSoftRigidDynamicsWorld, btScalar( 0 ), groundTransform, groundShape );
 	}
 }
 
@@ -112,16 +122,16 @@ void BulletWorld::donePhysics()
 		delete bulletBird;
 	}
 
-	for( int i = mDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i )
+	for( int i = mSoftRigidDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i )
 	{
-		btCollisionObject *obj = mDynamicsWorld->getCollisionObjectArray()[ i ];
+		btCollisionObject *obj = mSoftRigidDynamicsWorld->getCollisionObjectArray()[ i ];
 		btRigidBody *body = btRigidBody::upcast( obj );
 		if( body && body->getMotionState())
 		{
 			delete body->getMotionState();
 		}
 
-		mDynamicsWorld->removeCollisionObject( obj );
+		mSoftRigidDynamicsWorld->removeCollisionObject( obj );
 		delete obj;
 	}
 
@@ -131,7 +141,7 @@ void BulletWorld::donePhysics()
 		delete shape;
 	}
 
-	delete mDynamicsWorld;
+	delete mSoftRigidDynamicsWorld;
 	delete mSolver;
 	delete mBroadphase;
 	delete mDispatcher;
@@ -158,7 +168,7 @@ btRigidBody *BulletWorld::createRigidBody( btDynamicsWorld *world, btScalar mass
 
 void BulletWorld::spawnBulletRagdoll( const ci::Vec3f &pos )
 {
-	BulletRagdoll *bulletRagdoll = new BulletRagdoll( mDynamicsWorld, CinderBullet::convert( pos ));
+	BulletRagdoll *bulletRagdoll = new BulletRagdoll( mSoftRigidDynamicsWorld, CinderBullet::convert( pos ));
 	mBulletRagdolls.push_back( bulletRagdoll );
 }
 
@@ -168,7 +178,7 @@ BulletBird *BulletWorld::spawnBulletBird( const ci::Vec3f &pos )
 
 	posConv = ci::Vec3f( 0, 10, 0 );
 
-	BulletBird *bulletBird = new BulletBird( mDynamicsWorld, posConv );
+	BulletBird *bulletBird = new BulletBird( mSoftRigidDynamicsWorld, &mSoftBodyWorldInfo, posConv );
 	mBulletBirds.push_back( bulletBird );
 
 	return bulletBird;
@@ -221,14 +231,14 @@ void BulletWorld::mouseDown( ci::app::MouseEvent event, const ci::CameraPersp &c
 
 void BulletWorld::addConstraint( const BulletConstraint &constraint, float clamping, float tau )
 {
-	mDynamicsWorld->addConstraint( constraint.mConstraint );
+	mSoftRigidDynamicsWorld->addConstraint( constraint.mConstraint );
 	constraint.mConstraint->m_setting.m_impulseClamp	= clamping;
 	constraint.mConstraint->m_setting.m_tau				= tau;
 }
 
 void BulletWorld::removeConstraint( const BulletConstraint &constraint )
 {
-	mDynamicsWorld->removeConstraint( constraint.mConstraint );
+	mSoftRigidDynamicsWorld->removeConstraint( constraint.mConstraint );
 }
 
 bool BulletWorld::checkIntersects( const ci::Ray &ray, float farClip, BulletConstraint *constraint )
@@ -237,7 +247,7 @@ bool BulletWorld::checkIntersects( const ci::Ray &ray, float farClip, BulletCons
 	btVector3 rayTo   = CinderBullet::convert( ray.calcPosition( farClip ) );
 
 	btCollisionWorld::ClosestRayResultCallback rayCallback( rayFrom, rayTo );
-	mDynamicsWorld->rayTest( rayFrom, rayTo, rayCallback );
+	mSoftRigidDynamicsWorld->rayTest( rayFrom, rayTo, rayCallback );
 
 	if( rayCallback.hasHit() )
 	{

@@ -62,7 +62,7 @@
       <AdditionalIncludeDirectories>"..\..\..\cinder_0.8.5\include";..\include</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>cinder_d.lib;Leapd.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;LinearMath_vs2010_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cinder_d.lib;Leapd.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;BulletSoftBody_vs2010_debug.lib;LinearMath_vs2010_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\..\cinder_0.8.5\lib;..\..\..\cinder_0.8.5\lib\msw;..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\lib\msw;..\..\..\bullet-2.81-rev2613\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -114,7 +114,6 @@
     <ClCompile Include="..\src\BulletRagdollApp.cpp" />
     <ClCompile Include="..\src\CinderBulletDebugDrawer.cpp" />
     <ClCompile Include="..\src\BulletRagdoll.cpp" />
-    <ClCompile Include="..\src\HangConstraint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.h" />
@@ -127,7 +126,6 @@
     <ClInclude Include="..\include\CinderBullet.h" />
     <ClInclude Include="..\include\CinderBulletDebugDrawer.h" />
     <ClInclude Include="..\include\BulletRagdoll.h" />
-    <ClInclude Include="..\include\HangConstraint.h" />
     <ClInclude Include="..\include\Resources.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

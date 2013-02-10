@@ -3,6 +3,8 @@
 #include "cinder/Vector.h"
 #include "CinderBullet.h"
 #include "BulletBird.h"
+#include "BulletSoftBody/btSoftBodyHelpers.h"
+#include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 
 #define CONSTRAINT_DEBUG_SIZE 0.2f
 
@@ -29,7 +31,7 @@ using namespace ci;
  f         f  foot
 */
 
-mndl::kit::params::PInterfaceGl   BulletBird::mParams;
+mndl::kit::params::PInterfaceGl   BulletBird::mParamsBird;
 float                             BulletBird::mBeckSize   = 1.0; // cylinder shape
 float                             BulletBird::mHeadSize   = 2.0; // sphere shape
 float                             BulletBird::mNeckSize   = 1.0; // sphere shape
@@ -40,24 +42,63 @@ float                             BulletBird::mStickSize  = 4.0; // control cros
 
 int                               BulletBird::mNeckPart   = 4  ; // count of neck sphere
 int                               BulletBird::mLegPart    = 4  ; // count of leg  sphere
-int                               BulletBird::mStringSize = 0.0; // size of string from head
-
-float                             BulletBird::mTau          = 0.01;
-float                             BulletBird::mDamping      = 1.0;
-float                             BulletBird::mImpulseClamp = 0.0;
+float                             BulletBird::mStringSize = 0.0; // size of string from head
 
 
-BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffset )
+float                             BulletBird::mLinearDamping             = 0.85;
+float                             BulletBird::mAngularDamping            = 0.85;
+float                             BulletBird::mDeactivationTime          = 0.8;
+float                             BulletBird::mLinearSleepingThresholds  = 1.6;
+float                             BulletBird::mAngularSleepingThresholds = 2.5;
+
+float                             BulletBird::mDamping = 0.01;
+// float                             BulletBird::mLinCFM  = 0.0;
+// float                             BulletBird::mLinERP  = 0.7;
+// float                             BulletBird::mAngCFM  = 0.0f;
+
+
+mndl::kit::params::PInterfaceGl   BulletBird::mParamsRope;
+int                               BulletBird::mRopePart    = 16;     // rope part count
+float                             BulletBird::mRopeMass    = 5.0;    // mass
+float                             BulletBird::mKVCF        = 1.0;    // Velocities correction factor (Baumgarte)
+float                             BulletBird::mKDP         = 0.0;    // Damping coefficient [0,1]
+float                             BulletBird::mKDG         = 0.0;    // Drag coefficient [0,+inf]
+float                             BulletBird::mKLF         = 0.0;    // Lift coefficient [0,+inf]
+float                             BulletBird::mKPR         = 0.0;    // Pressure coefficient [-inf,+inf]
+float                             BulletBird::mKVC         = 0.0;    // Volume conversation coefficient [0,+inf]
+float                             BulletBird::mKDF         = 0.2;    // Dynamic friction coefficient [0,1]
+float                             BulletBird::mKMT         = 0.0;    // Pose matching coefficient [0,1]
+float                             BulletBird::mKCHR        = 1.0;    // Rigid contacts hardness [0,1]
+float                             BulletBird::mKKHR        = 0.1;    // Kinetic contacts hardness [0,1]
+float                             BulletBird::mKSHR        = 1.0;    // Soft contacts hardness [0,1]
+float                             BulletBird::mKAHR        = 0.7;    // Anchors hardness [0,1]
+float                             BulletBird::mMaxvolume   = 1.0;    // Maximum volume ratio for pose
+float                             BulletBird::mTimescale   = 1.0;    // Time scale
+int                               BulletBird::mViterations = 0;      // Velocities solver iterations
+int                               BulletBird::mPiterations = 4;      // Positions solver iterations
+int                               BulletBird::mDiterations = 0;      // Drift solver iterations
+int                               BulletBird::mCiterations = 4;      // Cluster solver iterations
+
+
+// float                             BulletBird::mTau          = 0.01;
+// float                             BulletBird::mDamping      = 1.0;
+// float                             BulletBird::mImpulseClamp = 0.0;
+
+
+BulletBird::BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBodyWorldInfo, const ci::Vec3f &worldOffset )
 : mOwnerWorld( ownerWorld )
+, mSoftBodyWorldInfo( softBodyWorldInfo )
 {
-	float hangSize = 1;
+	float hangSize = 0.2;
 
-	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                        )); // -> BODYPART_BECK
-	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                               ))); // -> BODYPART_HEAD
-	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                               ))); // -> BODYPART_NECK
-	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                               ))); // -> BODYPART_BODY
-	mShapes.push_back( new btSphereShape  ( btScalar ( mLegSize                                ))); // -> BODYPART_LEG
-	mShapes.push_back( new btCylinderShape( btVector3( mFootSize * 8, mFootSize, mFootSize * 8 ))); // -> BODYPART_FOOT
+	mShapes.push_back( new btConeShape    ( mBeckSize / 2, 2 * mBeckSize                          )); // -> BODYPART_BECK
+	mShapes.push_back( new btSphereShape  ( btScalar ( mHeadSize                                 ))); // -> BODYPART_HEAD
+	mShapes.push_back( new btSphereShape  ( btScalar ( mNeckSize                                 ))); // -> BODYPART_NECK
+	mShapes.push_back( new btSphereShape  ( btScalar ( mBodySize                                 ))); // -> BODYPART_BODY
+	mShapes.push_back( new btSphereShape  ( btScalar ( mLegSize                                  ))); // -> BODYPART_LEG
+	mShapes.push_back( new btCylinderShape( btVector3( mLegSize * 2.5, mFootSize, mLegSize * 2.5 ))); // -> BODYPART_FOOT
+	mShapes.push_back( new btCompoundShape(                                                       )); // -> BODYPART_CROSS
+	mShapes.push_back( new btBoxShape     ( btVector3( hangSize, hangSize, mStickSize + 2 * hangSize ))); // -> BODYPART_HANG
 
 	float neckLength = mBodySize + mNeckPart * 2 * mNeckSize + mHeadSize;
 	float legLength  = mBodySize + mLegPart  * 2 * mLegSize  - mLegSize;
@@ -71,11 +112,11 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	Vec3f leftLegPos   = Vec3f( -mStickSize, 0, 0 );
 	Vec3f rightLegPos  = Vec3f(  mStickSize, 0, 0 );
 
-	mPosHangCenter     = Vec3f( 0, headPos.y + mStringSize, 0 );
-	mPosHangFront      = mPosHangCenter + offset + Vec3f( 0, 0, -mStickSize );
-	mPosHangBack       = mPosHangCenter + offset + Vec3f( 0, 0,  mStickSize );
-	mPosHangLeft       = mPosHangCenter + offset + Vec3f( -mStickSize, 0, 0 );
-	mPosHangRight      = mPosHangCenter + offset + Vec3f(  mStickSize, 0, 0 );
+	mPosHangCenter     = Vec3f( 0, headPos.y + mStringSize, 0 ) + offset;
+	mPosHangFront      = mPosHangCenter + Vec3f( 0, 0, -mStickSize );
+	mPosHangBack       = mPosHangCenter + Vec3f( 0, 0,  mStickSize );
+	mPosHangLeft       = mPosHangCenter + Vec3f( -mStickSize, 0, 0 );
+	mPosHangRight      = mPosHangCenter + Vec3f(  mStickSize, 0, 0 );
 
 	Vec3f pos;
 	Vec3f orient;
@@ -86,13 +127,13 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	pos = leftFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
 
 	// right foot
 	pos = rightFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
 
 	// left legs
 	orient = bodyPos - leftLegPos;
@@ -102,7 +143,7 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mLegSize * orient ));
-		mBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
 	}
 
 	// right legs
@@ -113,14 +154,14 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mLegSize * orient ));
-		mBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
 	}
 
 	// body
 	pos = bodyPos + offset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mBodies.push_back( localCreateRigidBody( mBodySize , transform, mShapes[ BODYPART_BODY ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mBodySize , transform, mShapes[ BODYPART_BODY ] ));
 
 	// neck
 	orient = headPos - bodyPos;
@@ -130,14 +171,14 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mNeckSize * orient ));
-		mBodies.push_back( localCreateRigidBody( mNeckSize , transform, mShapes[ BODYPART_NECK ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mNeckSize , transform, mShapes[ BODYPART_NECK ] ));
 	}
 
 	// head
 	pos = headPos + offset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mBodies.push_back( localCreateRigidBody( mHeadSize , transform, mShapes[ BODYPART_HEAD ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mHeadSize , transform, mShapes[ BODYPART_HEAD ] ));
 
 	// beck
 	pos    = beckPos + offset;
@@ -145,15 +186,37 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	transform.setIdentity();
 	transform.setRotation( CinderBullet::convert( rotate ));
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mBodies.push_back( localCreateRigidBody( mBeckSize , transform, mShapes[ BODYPART_BECK ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mBeckSize , transform, mShapes[ BODYPART_BECK ] ));
 
-	// Setup some damping on the mBodies
-	for( Bodies::iterator it = mBodies.begin(); it != mBodies.end(); ++it )
+	// hang
+	btCompoundShape* compShape = (btCompoundShape*)mShapes[ BODYPART_CROSS ];
+
+	pos = Vec3f( 0, 0, 0 );
+	transform.setIdentity();
+	transform.setOrigin( CinderBullet::convert( pos ));
+	compShape->addChildShape( transform, mShapes[ BODYPART_HANG ] );
+
+	pos = Vec3f( 0, 0, 0 );
+	rotate = Quatf( Vec3f::zAxis(), Vec3f::xAxis());
+	transform.setIdentity();
+	transform.setRotation( CinderBullet::convert( rotate ));
+	transform.setOrigin( CinderBullet::convert( pos ));
+	compShape->addChildShape( transform, mShapes[ BODYPART_HANG ] );
+
+	pos = mPosHangCenter;
+	transform.setIdentity();
+	transform.setOrigin( CinderBullet::convert( pos ));
+	mRigidBodies.push_back( localCreateRigidBody( hangSize * 4, transform, compShape ));
+
+	getBody( BODYPART_CROSS )->setCollisionFlags( getBody( BODYPART_CROSS )->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT );
+
+	// Setup some damping on the mRigidBodies
+	for( RigidBodies::iterator it = mRigidBodies.begin(); it != mRigidBodies.end(); ++it )
 	{
 		btRigidBody *body = *it;
-		body->setDamping( 0.85, 0.85 );
-		body->setDeactivationTime( 0.8 );
-		body->setSleepingThresholds( 1.6, 2.5 );
+		body->setDamping( mLinearDamping, mAngularDamping );
+		body->setDeactivationTime( mDeactivationTime );
+		body->setSleepingThresholds( mLinearSleepingThresholds, mAngularSleepingThresholds );
 	}
 
 	// Now setup the constraints
@@ -323,35 +386,40 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffse
 	{
 		btConeTwistConstraint *constraint = static_cast< btConeTwistConstraint * >( *it );
 
-		constraint->setDamping( .1 );
+		constraint->setDamping( mDamping );
 	}
 
-	HangConstraint *hangConstraint;
-	Vec3f hangPos;
+	btSoftBody *rope;
+	Vec3f from, to;
+	btRigidBody *rigidBodyFrom, *rigidBodyTo;
 
-	pos     = headPos + offset;
-	hangPos = mPosHangFront;
-	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_HEAD ), pos );
-	mHangConstraints.push_back( hangConstraint );
-	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
+	from = headPos + offset;
+	to   = mPosHangFront;
+	rigidBodyFrom = getBody( BODYPART_HEAD    );
+	rigidBodyTo   = getBody( BODYPART_CROSS   );
+	rope = localCreateRope( from, to, rigidBodyFrom, rigidBodyTo );
+	mSoftBodies.push_back( rope );
 
-	pos     = bodyPos + offset;
-	hangPos = mPosHangBack;
-	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_BODY ), pos );
-	mHangConstraints.push_back( hangConstraint );
-	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
+	from = bodyPos + offset;
+	to   = mPosHangBack;
+	rigidBodyFrom = getBody( BODYPART_BODY    );
+	rigidBodyTo   = getBody( BODYPART_CROSS   );
+	rope = localCreateRope( from, to, rigidBodyFrom, rigidBodyTo );
+	mSoftBodies.push_back( rope );
 
-	pos     = leftLegPos + offset;
-	hangPos = mPosHangLeft;
-	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_LEG, 0 ), pos );
-	mHangConstraints.push_back( hangConstraint );
-	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
+	from = leftLegPos + offset;
+	to   = mPosHangLeft;
+	rigidBodyFrom = getBody( BODYPART_LEG , 0 );
+	rigidBodyTo   = getBody( BODYPART_CROSS   );
+	rope = localCreateRope( from, to, rigidBodyFrom, rigidBodyTo );
+	mSoftBodies.push_back( rope );
 
-	pos     = rightLegPos + offset;
-	hangPos = mPosHangRight;
-	hangConstraint = new HangConstraint( hangPos, getBody( BODYPART_LEG, mLegPart ), pos );
-	mHangConstraints.push_back( hangConstraint );
-	mOwnerWorld->addConstraint( hangConstraint->mConstraint, false );
+	from = rightLegPos + offset;
+	to   = mPosHangRight;
+	rigidBodyFrom = getBody( BODYPART_LEG , mLegPart );
+	rigidBodyTo   = getBody( BODYPART_CROSS   );
+	rope = localCreateRope( from, to, rigidBodyFrom, rigidBodyTo );
+	mSoftBodies.push_back( rope );
 }
 
 BulletBird::~BulletBird()
@@ -363,13 +431,7 @@ BulletBird::~BulletBird()
 		delete *it;
 	}
 
-	for( HangConstraints::iterator it = mHangConstraints.begin(); it != mHangConstraints.end(); ++it )
-	{
-		mOwnerWorld->removeConstraint( (*it)->mConstraint );
-		delete *it;
-	}
-
-	for( Bodies::iterator it = mBodies.begin(); it != mBodies.end(); ++it )
+	for( RigidBodies::iterator it = mRigidBodies.begin(); it != mRigidBodies.end(); ++it )
 	{
 		btRigidBody *rigidBody = *it;
 
@@ -379,6 +441,15 @@ BulletBird::~BulletBird()
 			delete rigidBody->getMotionState();
 
 		delete rigidBody;
+	}
+
+	for( SoftBodies::iterator it = mSoftBodies.begin(); it != mSoftBodies.end(); ++it )
+	{
+		btSoftBody *softBody = *it;
+
+		((btSoftRigidDynamicsWorld*)mOwnerWorld)->removeSoftBody( softBody );
+
+		delete softBody;
 	}
 
 	for( Shapes::iterator it = mShapes.begin(); it != mShapes.end(); ++it )
@@ -394,24 +465,24 @@ void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec
 	 || norm == Vec3f::zero())
 		return;
 
-	ci::Vec3f dir2 = dir.normalized();
-	ci::Vec3f cross = dir2.cross( norm.normalized() );
-	cross.normalize();
+	ci::Vec3f cross = dir.cross( norm ).normalized();
 
-	ci::Vec3f hangPos[4];
+	Quatf quatZ( -Vec3f::zAxis(), dir );
+	Quatf quatY( -Vec3f::yAxis(), norm );
+	Quatf rotate = quatZ * quatY;
+	Vec3f posCenter    = mPosHangCenter;
 
-	hangPos[ 0 ] = mPosHangFront + (   dir2  * mStickSize ) - ( - Vec3f::zAxis() * mStickSize );
-	hangPos[ 1 ] = mPosHangBack  + ( - dir2  * mStickSize ) - (   Vec3f::zAxis() * mStickSize );
-	hangPos[ 2 ] = mPosHangLeft  + (   cross * mStickSize ) - ( - Vec3f::xAxis() * mStickSize );
-	hangPos[ 3 ] = mPosHangRight + ( - cross * mStickSize ) - (   Vec3f::xAxis() * mStickSize );
+	btTransform transform;
+	transform.setIdentity();
+	transform.setRotation( CinderBullet::convert( rotate ));
+	transform.setOrigin( CinderBullet::convert( posCenter ));
+	btMotionState *motionState = getBody( BODYPART_CROSS )->getMotionState();
+	motionState->setWorldTransform( transform );
 
-	for( int i = 0; i < 4; ++i )
-	{
-		mHangConstraints[i]->update( hangPos[i] );
-		mHangConstraints[i]->mConstraint->m_setting.m_damping      = mDamping;
-		mHangConstraints[i]->mConstraint->m_setting.m_impulseClamp = mImpulseClamp;
-		mHangConstraints[i]->mConstraint->m_setting.m_tau          = mTau;
-	}
+	mSoftBodies[0]->m_nodes[mSoftBodies[0]->m_nodes.size() - 1].m_x = CinderBullet::convert( mPosHangCenter + dir   * mStickSize );
+	mSoftBodies[1]->m_nodes[mSoftBodies[1]->m_nodes.size() - 1].m_x = CinderBullet::convert( mPosHangCenter - dir   * mStickSize );
+	mSoftBodies[2]->m_nodes[mSoftBodies[2]->m_nodes.size() - 1].m_x = CinderBullet::convert( mPosHangCenter + cross * mStickSize );
+	mSoftBodies[3]->m_nodes[mSoftBodies[3]->m_nodes.size() - 1].m_x = CinderBullet::convert( mPosHangCenter - cross * mStickSize );
 }
 
 btRigidBody *BulletBird::localCreateRigidBody( btScalar mass, const btTransform &startTransform, btCollisionShape *shape )
@@ -432,6 +503,43 @@ btRigidBody *BulletBird::localCreateRigidBody( btScalar mass, const btTransform 
 	return body;
 }
 
+btSoftBody *BulletBird::localCreateRope( const ci::Vec3f &from, const ci::Vec3f &to, btRigidBody *rigidBodyFrom, btRigidBody *rigidBodyTo )
+{
+	btSoftBody *rope = btSoftBodyHelpers::CreateRope( *mSoftBodyWorldInfo
+	                                                ,  CinderBullet::convert( from )
+	                                                ,  CinderBullet::convert( to )
+	                                                ,  mRopePart
+	                                                ,  2 );
+
+	rope->setTotalMass( mRopeMass );
+
+	rope->m_cfg.kVCF        = mKVCF;
+	rope->m_cfg.kDP         = mKDP;
+	rope->m_cfg.kDG         = mKDG;
+	rope->m_cfg.kLF         = mKLF;
+	rope->m_cfg.kPR         = mKPR;
+	rope->m_cfg.kVC         = mKVC;
+	rope->m_cfg.kDF         = mKDF;
+	rope->m_cfg.kMT         = mKMT;
+	rope->m_cfg.kCHR        = mKCHR;
+	rope->m_cfg.kKHR        = mKKHR;
+	rope->m_cfg.kSHR        = mKSHR;
+	rope->m_cfg.kAHR        = mKAHR;
+	rope->m_cfg.maxvolume   = mMaxvolume;
+	rope->m_cfg.timescale   = mTimescale;
+	rope->m_cfg.viterations = mViterations;
+	rope->m_cfg.piterations = mPiterations;
+	rope->m_cfg.diterations = mDiterations;
+	rope->m_cfg.citerations = mCiterations;
+
+	rope->appendAnchor( 0                       , rigidBodyFrom );
+	rope->appendAnchor( rope->m_nodes.size() - 1, rigidBodyTo   );
+
+	((btSoftRigidDynamicsWorld*)mOwnerWorld)->addSoftBody( rope );
+
+	return rope;
+}
+
 btCollisionShape *BulletBird::getShape( BodyPart bodyPart )
 {
 	return mShapes[ bodyPart ];
@@ -441,12 +549,14 @@ btRigidBody *BulletBird::getBody( BodyPart bodyPart, int count /* = 0 */ )
 {
 	switch( bodyPart )
 	{
-	case BODYPART_FOOT : return mBodies[ 0 + count                            ]; break;
-	case BODYPART_LEG  : return mBodies[ 2 + count                            ]; break;
-	case BODYPART_BODY : return mBodies[ 2 + 2 * mLegPart                     ]; break;
-	case BODYPART_NECK : return mBodies[ 3 + 2 * mLegPart + count             ]; break;
-	case BODYPART_HEAD : return mBodies[ 3 + 2 * mLegPart + mNeckPart         ]; break;
-	case BODYPART_BECK : return mBodies[ 4 + 2 * mLegPart + mNeckPart         ]; break;
+	case BODYPART_FOOT  : return mRigidBodies[ 0 + count                            ]; break;
+	case BODYPART_LEG   : return mRigidBodies[ 2 + count                            ]; break;
+	case BODYPART_BODY  : return mRigidBodies[ 2 + 2 * mLegPart                     ]; break;
+	case BODYPART_NECK  : return mRigidBodies[ 3 + 2 * mLegPart + count             ]; break;
+	case BODYPART_HEAD  : return mRigidBodies[ 3 + 2 * mLegPart + mNeckPart         ]; break;
+	case BODYPART_BECK  : return mRigidBodies[ 4 + 2 * mLegPart + mNeckPart         ]; break;
+	case BODYPART_CROSS : return mRigidBodies[ 5 + 2 * mLegPart + mNeckPart         ]; break;
+	case BODYPART_HANG  : return 0;
 	}
 
 	return 0;
@@ -454,25 +564,60 @@ btRigidBody *BulletBird::getBody( BodyPart bodyPart, int count /* = 0 */ )
 
 void BulletBird::setupParams()
 {
-	mParams = mndl::kit::params::PInterfaceGl( "Bird", ci::Vec2i( 250, 350 ), ci::Vec2i( 500, 50 ) );
-	mParams.addPersistentSizeAndPosition();
+	mParamsBird = mndl::kit::params::PInterfaceGl( "Bird", ci::Vec2i( 250, 350 ), ci::Vec2i( 500, 50 ) );
+	mParamsBird.addPersistentSizeAndPosition();
 
-	mParams.addText( "Body" );
-	mParams.addPersistentParam( "Beck size" , &mBeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
-	mParams.addPersistentParam( "Head size" , &mHeadSize , 2.0f, "min=0.5 max=5.0 step=0.1" );
-	mParams.addPersistentParam( "Neck size" , &mNeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
-	mParams.addPersistentParam( "Body size" , &mBodySize , 3.0f, "min=0.5 max=5.0 step=0.1" );
-	mParams.addPersistentParam( "Leg size"  , &mLegSize  , 1.0f, "min=0.5 max=5.0 step=0.1" );
-	mParams.addPersistentParam( "Foot size" , &mFootSize , 0.3f, "min=0.1 max=3.0 step=0.1" );
-	mParams.addPersistentParam( "Stick size", &mStickSize, 4.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addText( "Body" );
+	mParamsBird.addPersistentParam( "Beck size" , &mBeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Head size" , &mHeadSize , 2.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Neck size" , &mNeckSize , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Body size" , &mBodySize , 3.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Leg size"  , &mLegSize  , 1.0f, "min=0.5 max=5.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Foot size" , &mFootSize , 0.3f, "min=0.1 max=3.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Stick size", &mStickSize, 4.0f, "min=0.5 max=5.0 step=0.1" );
 
-	mParams.addPersistentParam( "Neck part" , &mNeckPart , 4   , "min=2 max=8 step=1" );
-	mParams.addPersistentParam( "Leg part"  , &mLegPart  , 4   , "min=2 max=8 step=1" );
+	mParamsBird.addPersistentParam( "Neck part" , &mNeckPart , 4   , "min=2 max=8 step=1" );
+	mParamsBird.addPersistentParam( "Leg part"  , &mLegPart  , 4   , "min=2 max=8 step=1" );
 
-	mParams.addPersistentParam( "String size", &mStringSize, 0.0f, "min=0.0 max=5.0 step=0.1" );
+	mParamsBird.addText( "RigidBody" );
+	mParamsBird.addPersistentParam( "Linear damping"             , &mLinearDamping            , 0.85 , "min=0.0 max=1.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Angular damping"            , &mAngularDamping           , 0.85 , "min=0.0 max=1.0 step=0.1" );
+	mParamsBird.addPersistentParam( "Deactivation time"          , &mDeactivationTime         , 0.8  , "min=0.0         step=0.1" );
+	mParamsBird.addPersistentParam( "Linear sleeping thresholds" , &mLinearSleepingThresholds , 1.6  , "min=0.0         step=0.1" );
+	mParamsBird.addPersistentParam( "Angular sleeping thresholds", &mAngularSleepingThresholds, 2.5  , "min=0.0         step=0.1" );
 
-	mParams.addText( "Hang constraints" );
-	mParams.addPersistentParam( "Tau"          , &mTau         , 0.01f,  "min=0.0 max=1.0 step=0.01" );
-	mParams.addPersistentParam( "Damping"      , &mDamping     , 1.0f,  "min=0.0 max=1.0 step=0.01" );
-	mParams.addPersistentParam( "Impulse clamp", &mImpulseClamp, 0.0f,  "min=0.0 max=10.0 step=0.1" );
+	mParamsBird.addText( "Constraint" );
+	mParamsBird.addPersistentParam( "Damping"                    , &mDamping                  , 0.01 , "min=0.0 max=1.0 step=0.01" );
+// 	mParamsBird.addPersistentParam( "LinCFM"                     , &mLinCFM                   , 0.0  , "min=0.0 max=1.0 step=0.01" );
+// 	mParamsBird.addPersistentParam( "LinERP"                     , &mLinERP                   , 0.7  , "min=0.0 max=1.0 step=0.01" );
+// 	mParamsBird.addPersistentParam( "AngCFM"                     , &mAngCFM                   , 0.0f , "min=0.0 max=1.0 step=0.01" );
+
+	mParamsRope = mndl::kit::params::PInterfaceGl( "Rope", ci::Vec2i( 250, 350 ), ci::Vec2i( 700, 50 ) );
+	mParamsRope.addPersistentSizeAndPosition();
+	mParamsRope.addPersistentParam( "String size"                              , &mStringSize, 5.0f, "min=0.0 max=5.0 step=0.1" );
+	mParamsRope.addPersistentParam( "Part"                                     , &mRopePart    , 16,   "min=4 max=50 step=1"         );
+	mParamsRope.addPersistentParam( "Mass"                                     , &mRopeMass    , 5.0,  "min=0.01 max=20.0 step=0.01" );
+	mParamsRope.addPersistentParam( "Velocities correction factor (Baumgarte)" , &mKVCF        , 1.0,  "min=0.0  max=20.0 step=0.1"  );
+	mParamsRope.addPersistentParam( "Damping coefficient [0,1]"                , &mKDP         , 0.0,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Drag coefficient [0,+inf]"                , &mKDG         , 0.0,  "min=0.0           step=0.01" );
+	mParamsRope.addPersistentParam( "Lift coefficient [0,+inf]"                , &mKLF         , 0.0,  "min=0.0           step=0.01" );
+	mParamsRope.addPersistentParam( "Pressure coefficient [-inf,+inf]"         , &mKPR         , 0.0,  "                  step=0.01" );
+	mParamsRope.addPersistentParam( "Volume conversation coefficient [0,+inf]" , &mKVC         , 0.0,  "min=0.0           step=0.01" );
+	mParamsRope.addPersistentParam( "Dynamic friction coefficient [0,1]"       , &mKDF         , 0.2,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Pose matching coefficient [0,1]"          , &mKMT         , 0.0,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Rigid contacts hardness [0,1]"            , &mKCHR        , 1.0,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Kinetic contacts hardness [0,1]"          , &mKKHR        , 0.1,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Soft contacts hardness [0,1]"             , &mKSHR        , 1.0,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Anchors hardness [0,1]"                   , &mKAHR        , 0.7,  "min=0.0  max=1.0  step=0.01" );
+	mParamsRope.addPersistentParam( "Maximum volume ratio for pose"            , &mMaxvolume   , 1.0   );
+	mParamsRope.addPersistentParam( "Time scale"                               , &mTimescale   , 1.0   );
+	mParamsRope.addPersistentParam( "Velocities solver iterations"             , &mViterations , 0     );
+	mParamsRope.addPersistentParam( "Positions solver iterations"              , &mPiterations , 4     );
+	mParamsRope.addPersistentParam( "Drift solver iterations"                  , &mDiterations , 0     );
+	mParamsRope.addPersistentParam( "Cluster solver iterations"                , &mCiterations , 4     );
+
+// 	mParams.addText( "Hang constraints" );
+// 	mParams.addPersistentParam( "Tau"          , &mTau         , 0.01f,  "min=0.0 max=1.0 step=0.01" );
+// 	mParams.addPersistentParam( "Damping"      , &mDamping     , 1.0f,  "min=0.0 max=1.0 step=0.01" );
+// 	mParams.addPersistentParam( "Impulse clamp", &mImpulseClamp, 0.0f,  "min=0.0 max=10.0 step=0.1" );
 }

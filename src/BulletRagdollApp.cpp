@@ -218,42 +218,30 @@ void BulletRagdollApp::keyDown( KeyEvent event )
 		break;
 	case KeyEvent::KEY_LEFT:
 		{
-			if( ! mCameraLock )
-			{
-				mMayaCam.mouseDown( Vec2i( mStepKey, 0 ));
-				mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
-				mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
-			}
+			mMayaCam.mouseDown( Vec2i( mStepKey, 0 ));
+			mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
+			mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
 		}
 		break;
 	case KeyEvent::KEY_RIGHT:
 		{
-			if( ! mCameraLock )
-			{
-				mMayaCam.mouseDown( Vec2i( 0       , 0 ));
-				mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
-				mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
-			}
+			mMayaCam.mouseDown( Vec2i( 0       , 0 ));
+			mMayaCam.mouseDrag( Vec2i( 0       , 0 ), true, false, false );
+			mMayaCam.mouseDrag( Vec2i( mStepKey, 0 ), true, false, false );
 		}
 		break;
 	case KeyEvent::KEY_UP:
 		{
-			if( ! mCameraLock )
-			{
-				mMayaCam.mouseDown( Vec2i( 0, mStepKey ));
-				mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
-				mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
-			}
+			mMayaCam.mouseDown( Vec2i( 0, mStepKey ));
+			mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
+			mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
 		}
 		break;
 	case KeyEvent::KEY_DOWN:
 		{
-			if( ! mCameraLock )
-			{
-				mMayaCam.mouseDown( Vec2i( 0, 0        ));
-				mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
-				mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
-			}
+			mMayaCam.mouseDown( Vec2i( 0, 0        ));
+			mMayaCam.mouseDrag( Vec2i( 0, 0        ), true, false, false );
+			mMayaCam.mouseDrag( Vec2i( 0, mStepKey ), true, false, false );
 		}
 		break;
 	case KeyEvent::KEY_ESCAPE:
@@ -327,8 +315,8 @@ void BulletRagdollApp::update()
 		}
 	}
 
-// 	if( mBulletBirdDebug )
-// 		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
+	if( mBulletBirdDebug )
+		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 }
 
 void BulletRagdollApp::draw()

@@ -2,6 +2,7 @@
 #define __BulletWorld_H__
 
 #include "btBulletDynamicsCommon.h"
+#include "BulletSoftBody/btSoftBody.h"
 #include "CinderBulletDebugDrawer.h"
 #include "BulletConstraint.h"
 #include "BulletBird.h"
@@ -50,7 +51,8 @@ protected:
 	btCollisionDispatcher                     *mDispatcher;
 	btBroadphaseInterface                     *mBroadphase;
 	btSequentialImpulseConstraintSolver       *mSolver;
-	btDiscreteDynamicsWorld                   *mDynamicsWorld;
+	btDynamicsWorld                           *mSoftRigidDynamicsWorld;
+	btSoftBodyWorldInfo                        mSoftBodyWorldInfo;
 
 	btAlignedObjectArray< btCollisionShape* >  mCollisionShapes;
 

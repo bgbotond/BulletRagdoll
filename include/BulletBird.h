@@ -3,8 +3,8 @@
 
 #include <vector>
 #include "btBulletDynamicsCommon.h"
+#include "BulletSoftBody/btSoftBody.h"
 #include "mndlkit/params/PParams.h"
-#include "HangConstraint.h"
 
 class BulletBird
 {
@@ -16,15 +16,17 @@ class BulletBird
 		BODYPART_BODY,
 		BODYPART_LEG,
 		BODYPART_FOOT,
+		BODYPART_CROSS,
+		BODYPART_HANG,
 	};
 
 typedef std::vector< btCollisionShape  * > Shapes;
-typedef std::vector< btRigidBody       * > Bodies;
+typedef std::vector< btRigidBody       * > RigidBodies;
+typedef std::vector< btSoftBody        * > SoftBodies;
 typedef std::vector< btTypedConstraint * > Constraints;
-typedef std::vector< HangConstraint    * > HangConstraints;
 
 public:
-	BulletBird( btDynamicsWorld *ownerWorld, const ci::Vec3f &worldOffset );
+	BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBodyWorldInfo, const ci::Vec3f &worldOffset );
 	~BulletBird();
 
 	void update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
@@ -33,14 +35,16 @@ public:
 
 protected:
 	btRigidBody *localCreateRigidBody( btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
+	btSoftBody  *localCreateRope( const ci::Vec3f &from, const ci::Vec3f &to, btRigidBody *rigidBodyFrom, btRigidBody *rigidBodyTo );
 
 	btCollisionShape  *getShape( BodyPart bodyPart );
 	btRigidBody       *getBody ( BodyPart bodyPart, int count = 0 );
 
 protected:
-	btDynamicsWorld   *mOwnerWorld;
+	btDynamicsWorld     *mOwnerWorld;
+	btSoftBodyWorldInfo *mSoftBodyWorldInfo;
 
-	static mndl::kit::params::PInterfaceGl            mParams;
+	static mndl::kit::params::PInterfaceGl            mParamsBird;
 	static float       mBeckSize;   // cylinder shape
 	static float       mHeadSize;   // sphere shape
 	static float       mNeckSize;   // sphere shape
@@ -51,11 +55,46 @@ protected:
 
 	static int         mNeckPart;   // count of neck sphere
 	static int         mLegPart;    // count of leg  sphere
-	static int         mStringSize; // size of string from head
+	static float       mStringSize; // size of string from head
 
-	static float       mTau;
+	// rigid body
+	static float       mLinearDamping;  // [0-1]
+	static float       mAngularDamping; // [0-1]
+	static float       mDeactivationTime;
+	static float       mLinearSleepingThresholds;
+	static float       mAngularSleepingThresholds;
+
+	// cone twist constraint
 	static float       mDamping;
-	static float       mImpulseClamp;
+// 	static float       mLinCFM;
+// 	static float       mLinERP;
+// 	static float       mAngCFM;
+
+	static mndl::kit::params::PInterfaceGl            mParamsRope;
+	static int         mRopePart;
+	static float       mRopeMass;
+	static float       mKVCF;           // Velocities correction factor (Baumgarte)
+	static float       mKDP;            // Damping coefficient [0,1]
+	static float       mKDG;            // Drag coefficient [0,+inf]
+	static float       mKLF;            // Lift coefficient [0,+inf]
+	static float       mKPR;            // Pressure coefficient [-inf,+inf]
+	static float       mKVC;            // Volume conversation coefficient [0,+inf]
+	static float       mKDF;            // Dynamic friction coefficient [0,1]
+	static float       mKMT;            // Pose matching coefficient [0,1]		
+	static float       mKCHR;           // Rigid contacts hardness [0,1]
+	static float       mKKHR;           // Kinetic contacts hardness [0,1]
+	static float       mKSHR;           // Soft contacts hardness [0,1]
+	static float       mKAHR;           // Anchors hardness [0,1]
+	static float       mMaxvolume;      // Maximum volume ratio for pose
+	static float       mTimescale;      // Time scale
+	static int         mViterations;    // Velocities solver iterations
+	static int         mPiterations;    // Positions solver iterations
+	static int         mDiterations;    // Drift solver iterations
+	static int         mCiterations;    // Cluster solver iterations
+
+// 	static float       mTau;
+// 	static float       mDamping;
+// 	static float       mImpulseClamp;
 
 	btVector3                mPosHead;
 	btVector3                mPosBody;
@@ -69,9 +108,9 @@ protected:
 	ci::Vec3f                mPosHangRight;
 
 	Shapes          mShapes;
-	Bodies          mBodies;
+	RigidBodies     mRigidBodies;
+	SoftBodies      mSoftBodies;
 	Constraints     mConstraints;
-	HangConstraints mHangConstraints;
 };
 
 #endif // __BulletBird_H__
