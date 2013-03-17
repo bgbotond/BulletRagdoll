@@ -21,12 +21,12 @@ public:
 
 	static inline btQuaternion convert( const ci::Quatf &quaternion )
 	{
-		return btQuaternion( quaternion.v.x, quaternion.v.y, quaternion.v.z, quaternion.w );
+		return btQuaternion( convert( quaternion.getAxis() ), quaternion.getAngle() );
 	}
 
 	static inline ci::Quatf convert( const btQuaternion &quaternion )
 	{
-		return ci::Quatf( ci::Vec3f( quaternion.x(), quaternion.y(), quaternion.z() ), quaternion.w() );
+		return ci::Quatf( convert( quaternion.getAxis() ), quaternion.getAngle() );
 	}
 };
 

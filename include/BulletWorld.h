@@ -6,9 +6,17 @@
 #include "CinderBulletDebugDrawer.h"
 #include "BulletConstraint.h"
 #include "BulletBird.h"
+#include "AssimpBird.h"
 #include "mndlkit/params/PParams.h"
 #include "cinder/app/MouseEvent.h"
 #include "cinder/Camera.h"
+
+enum collisionTypes
+{
+	CT_NOTHING = 0,      // Collide with nothing
+	CT_BONE    = 1 << 1, // Collide with bone
+	CT_GROUND  = 2 << 1, // Collide with ground
+};
 
 class BulletWorld
 {
@@ -29,9 +37,14 @@ public:
 	void donePhysics();
 
 	void spawnBulletRagdoll( const ci::Vec3f &pos );
+
 	BulletBird *spawnBulletBird( const ci::Vec3f &pos );
 	void removeBulletBird( BulletBird *bulletBird );
 	void updateBulletBird( BulletBird *bulletBird, const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
+
+	AssimpBird *BulletWorld::spawnAssimpBird( const ci::Vec3f &pos );
+	void removeAssimpBird( AssimpBird *assimpBird );
+	void updateAssimpBird( AssimpBird *assimpBird, const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm );
 
 protected:
 	btRigidBody *createRigidBody( btDynamicsWorld *world, btScalar mass, const btTransform &startTransform, btCollisionShape *shape );
@@ -46,6 +59,7 @@ protected:
 
 	btAlignedObjectArray< class BulletRagdoll *>     mBulletRagdolls;
 	btAlignedObjectArray< class BulletBird    *>     mBulletBirds;
+	btAlignedObjectArray< class AssimpBird    *>     mAssimpBirds;
 
 	btDefaultCollisionConfiguration           *mCollisionConfiguration;
 	btCollisionDispatcher                     *mDispatcher;

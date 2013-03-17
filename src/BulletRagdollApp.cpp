@@ -33,6 +33,8 @@ protected:
 	BulletWorld mBulletWorld;
 	BulletBird *mBulletBird;
 	BulletBird *mBulletBirdDebug;
+	AssimpBird *mAssimpBird;
+	AssimpBird *mAssimpBirdDebug;
 
 	mndl::kit::params::PInterfaceGl mParams;
 	float mFps;
@@ -65,6 +67,11 @@ void BulletRagdollApp::setup()
 {
 	mBulletBird = 0;
 	mBulletBirdDebug = 0;
+	mAssimpBird = 0;
+	mAssimpBirdDebug = 0;
+
+	gl::enableDepthRead();
+	gl::enableDepthWrite();
 
 	setupParams();
 
@@ -75,6 +82,8 @@ void BulletRagdollApp::setup()
 	mMayaCam.setCurrentCam( cam );
 
 	mBulletWorld.setup();
+
+	AssimpBird assimpBird( );
 
 	// Start device
 	mLeap = Device::create();
@@ -137,19 +146,25 @@ void BulletRagdollApp::setupParams()
 	mParams.addPersistentParam( "Position" , &mPosition , Vec3f( 0.0f, 10.0f, 0.0f ));
 	mParams.addPersistentParam( "Direction", &mDirection, Vec3f( 0.0f,  0.0f, -1.0f ));
 	mParams.addPersistentParam( "Normal"   , &mNormal   , Vec3f( 0.0f, -1.0f, 0.0f ));
-	mParams.addButton( "Spawn", [ this ]()
+// 	mParams.addButton( "Spawn", [ this ]()
+// 								{
+// 									if( mBulletBirdDebug )
+// 										mBulletWorld.removeBulletBird( mBulletBirdDebug );
+// 									mBulletBirdDebug = mBulletWorld.spawnBulletBird( mPosition * 10 );
+// 								} );
+	mParams.addButton( "SpawnAssimp", [ this ]()
 								{
-									if( mBulletBirdDebug )
-										mBulletWorld.removeBulletBird( mBulletBirdDebug );
-									mBulletBirdDebug = mBulletWorld.spawnBulletBird( mPosition * 10 );
+									if( mAssimpBirdDebug )
+										mBulletWorld.removeAssimpBird( mAssimpBirdDebug );
+									mAssimpBirdDebug = mBulletWorld.spawnAssimpBird( mPosition * 10 );
 								} );
-	mParams.addButton( "Update", [ this ]()
-								{
-									if( ! mBulletBirdDebug )
-										return;
-
-									mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
-								} );
+// 	mParams.addButton( "Update", [ this ]()
+// 								{
+// 									if( mBulletBirdDebug )
+// 										mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
+// 									if( mAssimpBirdDebug )
+// 										mBulletWorld.updateAssimpBird( mAssimpBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
+// 								} );
 
 	mParams.addPersistentParam( "Hand pos" , &mHandPos , Vec3f( -1, -1, -1 ), "", true );
 	mParams.addPersistentParam( "Hand dir" , &mHandDir , Vec3f( -1, -1, -1 ), "", true );
@@ -298,10 +313,15 @@ void BulletRagdollApp::update()
 		mHandDir  = hand.getDirection();
 		mHandNorm = hand.getNormal();
 
-		if( ! mBulletBird )
-			mBulletBird = mBulletWorld.spawnBulletBird( mHandPos );
+// 		if( ! mBulletBird )
+// 			mBulletBird = mBulletWorld.spawnBulletBird( mHandPos );
+// 
+// 		mBulletWorld.updateBulletBird( mBulletBird, mHandPos, mHandDir, mHandNorm );
 
-		mBulletWorld.updateBulletBird( mBulletBird, mHandPos, mHandDir, mHandNorm );
+		if( ! mAssimpBird )
+			mAssimpBird = mBulletWorld.spawnAssimpBird( mHandPos );
+
+		mBulletWorld.updateAssimpBird( mAssimpBird, mHandPos, mHandDir, mHandNorm );
 	}
 	else
 	{
@@ -309,14 +329,24 @@ void BulletRagdollApp::update()
 		{
 			mBulletWorld.removeBulletBird( mBulletBird );
 			mBulletBird = 0;
-			mHandPos = Vec3f( -1, -1, -1 );
-			mHandDir = Vec3f( -1, -1, -1 );
-			mHandNorm = Vec3f( -1, -1, -1 );
 		}
+
+		if( mAssimpBird )
+		{
+			mBulletWorld.removeAssimpBird( mAssimpBird );
+			mAssimpBird = 0;
+		}
+
+		mHandPos  = Vec3f( -1, -1, -1 );
+		mHandDir  = Vec3f( -1, -1, -1 );
+		mHandNorm = Vec3f( -1, -1, -1 );
 	}
 
 	if( mBulletBirdDebug )
 		mBulletWorld.updateBulletBird( mBulletBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
+
+	if( mAssimpBirdDebug )
+		mBulletWorld.updateAssimpBird( mAssimpBirdDebug, mPosition * 10, mDirection.normalized(), mNormal.normalized() );
 }
 
 void BulletRagdollApp::draw()
@@ -327,10 +357,14 @@ void BulletRagdollApp::draw()
 	gl::setViewport( getWindowBounds() );
 	gl::setMatrices( mMayaCam.getCamera() );
 
+	gl::enableDepthRead();
+	gl::enableDepthWrite();
+
 	mBulletWorld.draw();
 	mndl::kit::params::PInterfaceGl::draw();
 
-	if( mBulletBird )
+	if( mBulletBird
+	 || mAssimpBird )
 	{
 		glColor4ub( 255, 0, 0, 255 );
 		gl::drawVector( Vec3f::zero(), mHandDir * 3, 1, .5 );

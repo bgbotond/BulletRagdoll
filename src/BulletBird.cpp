@@ -127,13 +127,13 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBo
 	pos = leftFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mRigidBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mFootSize * 10, transform, mShapes[ BODYPART_FOOT ] ));
 
 	// right foot
 	pos = rightFootPos + worldOffset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mRigidBodies.push_back( localCreateRigidBody( mFootSize , transform, mShapes[ BODYPART_FOOT ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mFootSize * 10, transform, mShapes[ BODYPART_FOOT ] ));
 
 	// left legs
 	orient = bodyPos - leftLegPos;
@@ -143,7 +143,7 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBo
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mLegSize * orient ));
-		mRigidBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mLegSize * 10, transform, mShapes[ BODYPART_LEG ] ));
 	}
 
 	// right legs
@@ -154,14 +154,14 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBo
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mLegSize * orient ));
-		mRigidBodies.push_back( localCreateRigidBody( mLegSize , transform, mShapes[ BODYPART_LEG ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mLegSize * 10, transform, mShapes[ BODYPART_LEG ] ));
 	}
 
 	// body
 	pos = bodyPos + offset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mRigidBodies.push_back( localCreateRigidBody( mBodySize , transform, mShapes[ BODYPART_BODY ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mBodySize * 10, transform, mShapes[ BODYPART_BODY ] ));
 
 	// neck
 	orient = headPos - bodyPos;
@@ -171,14 +171,14 @@ BulletBird::BulletBird( btDynamicsWorld *ownerWorld, btSoftBodyWorldInfo *softBo
 	{
 		transform.setIdentity();
 		transform.setOrigin( CinderBullet::convert( pos + i * 2 * mNeckSize * orient ));
-		mRigidBodies.push_back( localCreateRigidBody( mNeckSize , transform, mShapes[ BODYPART_NECK ] ));
+		mRigidBodies.push_back( localCreateRigidBody( mNeckSize * 10, transform, mShapes[ BODYPART_NECK ] ));
 	}
 
 	// head
 	pos = headPos + offset;
 	transform.setIdentity();
 	transform.setOrigin( CinderBullet::convert( pos ));
-	mRigidBodies.push_back( localCreateRigidBody( mHeadSize , transform, mShapes[ BODYPART_HEAD ] ));
+	mRigidBodies.push_back( localCreateRigidBody( mHeadSize * 10, transform, mShapes[ BODYPART_HEAD ] ));
 
 	// beck
 	pos    = beckPos + offset;
@@ -469,7 +469,7 @@ void BulletBird::update( const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec
 
 	Quatf quatZ( -Vec3f::zAxis(), dir );
 	Quatf quatY( -Vec3f::yAxis(), norm );
-	Quatf rotate = quatZ * quatY;
+	Quatf rotate = quatY * quatZ;
 	Vec3f posCenter    = mPosHangCenter;
 
 	btTransform transform;

@@ -28,7 +28,8 @@ void BulletWorld::setup()
 	mTime = ci::app::App::get()->getElapsedSeconds();
 	initPhysics();
 	setupParams();
-	BulletBird::setupParams();
+//	BulletBird::setupParams();
+	AssimpBird::setupParams();
 }
 
 void BulletWorld::update()
@@ -45,32 +46,67 @@ void BulletWorld::update()
 			mDebugDrawer->setDrawEnable( (CinderBulletDebugDrawer::DrawType)i, mDebugDrawActive[ i ] );
 	}
 
+// 	// simple dynamics world doesn't handle fixed-time-stepping
+// 	double time = ci::app::App::get()->getElapsedSeconds();
+// 	float  ellapsedTime = ( float )( time - mTime ) * 1000000;
+// 	time = mTime;
+// 
+// 	float minFPS = 1000000.f/60.f;
+// 	if( ellapsedTime > minFPS )
+// 		ellapsedTime = minFPS;
+// 
+// 	if( mSoftRigidDynamicsWorld )
+// 	{
+// 		if( mSimulateOne || mSimulateAlways )
+// 		{
+// 			mSoftRigidDynamicsWorld->stepSimulation( ellapsedTime / 10000.f );
+// 			mSimulateOne = false;
+// 		}
+// 
+// 		//optional but useful: debug drawing
+// 		mSoftRigidDynamicsWorld->debugDrawWorld();
+// 	}
+
 	// simple dynamics world doesn't handle fixed-time-stepping
 	double time = ci::app::App::get()->getElapsedSeconds();
-	float  ellapsedTime = ( float )( time - mTime ) * 1000000;
+	float  ellapsedTime = ( float )( time - mTime );
 	time = mTime;
-
-	float minFPS = 1000000.f/60.f;
-	if( ellapsedTime > minFPS )
-		ellapsedTime = minFPS;
 
 	if( mSoftRigidDynamicsWorld )
 	{
 		if( mSimulateOne || mSimulateAlways )
 		{
-			mSoftRigidDynamicsWorld->stepSimulation( ellapsedTime / 1000000.f );
+			const float timegranularityphysics = 1/60.f;
+			float deltatimephy = ellapsedTime;
+			if( deltatimephy > timegranularityphysics ) deltatimephy = timegranularityphysics; // It is important to not simulate more than the granularity otherwise more than 1 round will be calculated that makes everything even slower that cause the frame time slower that cause even more round to calculate that makes it even more slower and so on until the system will stop, changing maxiteration to 1 is not a good solution, because the inner time lost would be accumulated and the system would want to get back if it can, made everything faster potentially a long period
+
+			mSoftRigidDynamicsWorld->stepSimulation( deltatimephy, 10, timegranularityphysics );
 			mSimulateOne = false;
 		}
 
 		//optional but useful: debug drawing
 		mSoftRigidDynamicsWorld->debugDrawWorld();
 	}
+
+// 	for( int i = 0; i < mAssimpBirds.size(); ++i )
+// 	{
+// 		AssimpBird *assimpBird = mAssimpBirds[ i ];
+// 
+// 		assimpBird->update();
+// 	}
 }
 
 void BulletWorld::draw()
 {
 	if( mSoftRigidDynamicsWorld != NULL )
 		mSoftRigidDynamicsWorld->debugDrawWorld();
+
+	for( int i = 0; i < mAssimpBirds.size(); ++i )
+	{
+		AssimpBird *assimpBird = mAssimpBirds[ i ];
+
+		assimpBird->draw();
+	}
 }
 
 void BulletWorld::initPhysics()
@@ -122,6 +158,12 @@ void BulletWorld::donePhysics()
 		delete bulletBird;
 	}
 
+	for( int i = 0; i < mAssimpBirds.size(); ++i )
+	{
+		AssimpBird *assimpBird = mAssimpBirds[ i ];
+		delete assimpBird;
+	}
+
 	for( int i = mSoftRigidDynamicsWorld->getNumCollisionObjects() - 1; i >= 0; --i )
 	{
 		btCollisionObject *obj = mSoftRigidDynamicsWorld->getCollisionObjectArray()[ i ];
@@ -161,7 +203,7 @@ btRigidBody *BulletWorld::createRigidBody( btDynamicsWorld *world, btScalar mass
 	rbInfo.m_additionalDamping = true;
 	btRigidBody *body = new btRigidBody( rbInfo );
 
-	world->addRigidBody( body );
+	world->addRigidBody( body, CT_GROUND, CT_GROUND | CT_BONE );
 
 	return body;
 }
@@ -195,6 +237,31 @@ void BulletWorld::updateBulletBird( BulletBird *bulletBird, const ci::Vec3f pos,
 {
 	ci::Vec3f posConv = pos / 10;
 	bulletBird->update( posConv, dir, norm );
+}
+
+AssimpBird *BulletWorld::spawnAssimpBird( const ci::Vec3f &pos )
+{
+	ci::Vec3f posConv = pos / 10;
+
+	posConv = ci::Vec3f( 0, 10, 0 );
+
+	AssimpBird *assimpBird = new AssimpBird( mSoftRigidDynamicsWorld, &mSoftBodyWorldInfo, posConv, ci::app::App::get()->getAssetPath( "madar_0221.dae" ) );
+	mAssimpBirds.push_back( assimpBird );
+
+	return assimpBird;
+}
+
+void BulletWorld::removeAssimpBird( AssimpBird *assimpBird )
+{
+	mAssimpBirds.remove( assimpBird );
+
+	delete assimpBird;
+}
+
+void BulletWorld::updateAssimpBird( AssimpBird *assimpBird, const ci::Vec3f pos, const ci::Vec3f dir, const ci::Vec3f norm )
+{
+	ci::Vec3f posConv = pos / 10;
+	assimpBird->update( posConv, dir, norm );
 }
 
 void BulletWorld::setupParams()

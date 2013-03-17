@@ -22,6 +22,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="blocks\Cinder-Assimp">
+      <UniqueIdentifier>{0ffa025c-f910-4dfb-aeda-8806a82c5017}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -56,6 +59,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\LeapMath.h">
       <Filter>blocks\Cinder-Leap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-Assimp\src\AssimpLoader.h">
+      <Filter>blocks\Cinder-Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\cinder_0.8.5\blocks\Cinder-Assimp\src\Node.h">
+      <Filter>blocks\Cinder-Assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\AssimpBird.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +104,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-LeapSdk\src\Cinder-LeapSdk.cpp">
       <Filter>blocks\Cinder-Leap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-Assimp\src\AssimpLoader.cpp">
+      <Filter>blocks\Cinder-Assimp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\cinder_0.8.5\blocks\Cinder-Assimp\src\Node.cpp">
+      <Filter>blocks\Cinder-Assimp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AssimpBird.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
